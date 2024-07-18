@@ -1,0 +1,35 @@
+[project]
+name = "fastoai"
+version = "1.0.1"
+description = "Start an API server as OpenAI's"
+authors = [
+    { name = "Tang Ziya", email = "tcztzy@gmail.Com" }
+]
+dependencies = [
+    "openai>=1.35.14",
+    "fastapi>=0.111.1",
+    "pydantic-settings>=2.3.4",
+]
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[project.optional-dependencies]
+ollama = ["ollama>=0.2.1"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fastoai"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
