@@ -6,7 +6,7 @@ authors = [
     { name = "Tang Ziya", email = "tcztzy@gmail.Com" }
 ]
 dependencies = [
-    "openai>=1.35.14",
+    "openai>=1.35.15",
     "fastapi>=0.111.1",
     "pydantic-settings>=2.3.4",
 ]
@@ -14,7 +14,7 @@ readme = "README.md"
 requires-python = ">= 3.12"
 
 [project.optional-dependencies]
-ollama = ["ollama>=0.2.1"]
+ollama = ["ollama>=0.3.0"]
 
 [build-system]
 requires = ["hatchling"]
