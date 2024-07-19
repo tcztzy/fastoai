@@ -41,3 +41,19 @@ class OAIRouter(APIRouter):
         return self.post(path, **kw)(args[0])
     create_chat_completions = post_chat_completions
     create_completions = create_chat_completions
+
+    def get_models(self, *args, **kwargs):
+        path = "/models"
+        if len(kwargs) > 0 or (len(args) + len(kwargs)) == 0:
+            def decorator(func):
+                return self.get(path, **kwargs)(func)
+            return decorator
+        return self.get(path, **kwargs)(args[0])
+
+    def get_assistants(self, *args, **kwargs):
+        path = "/assistants"
+        if len(kwargs) > 0 or (len(args) + len(kwargs)) == 0:
+            def decorator(func):
+                return self.get(path, **kwargs)(func)
+            return decorator
+        return self.get(path, **kwargs)(args[0])

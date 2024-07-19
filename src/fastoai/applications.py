@@ -29,3 +29,10 @@ class FastOAI(FastAPI):
             return decorator
         return self.router.post_chat_completions(args[0])
     create_chat_completions = post_chat_completions
+
+    def get_models(self, *args, **kwargs):
+        if len(kwargs) > 0 or (len(args) + len(kwargs)) == 0:
+            def decorator(func):
+                return self.router.get_models(**kwargs)(func)
+            return decorator
+        return self.router.get_models(args[0])
