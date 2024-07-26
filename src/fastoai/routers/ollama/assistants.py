@@ -9,10 +9,34 @@ from sqlmodel import col, select
 from ...models.assistant import Assistant as AssistantModel
 from ...models.user import User, get_current_active_user
 from ...requests import AssistantCreateParams, AssistantUpdateParams
+from ...routing import OAIRouter
 from ...schema import ListObject
 from ...settings import Settings, get_settings
 
+router = OAIRouter(tags=["Assistants"])
 
+
+@router.post_assistants(response_model_exclude_unset=True)
+async def create_assistant(
+    params: AssistantCreateParams,
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(get_current_active_user),
+) -> Assistant:
+    assistant_model = AssistantModel(
+        creator=user,
+        data=Assistant(
+            id="dummy",
+            created_at=0,
+            object="assistant",
+            **params.model_dump(exclude_unset=True),
+        ),
+    )
+    settings.session.add(assistant_model)
+    settings.session.commit()
+    return assistant_model.data
+
+
+@router.get_assistants
 async def list_assistants(
     limit: Annotated[int, Field(ge=1, le=100)] = 20,
     order: Literal["asc", "desc"] = "desc",
@@ -60,25 +84,7 @@ async def list_assistants(
     return ListObject[Assistant](data=assistants, has_more=has_more, **kwargs)
 
 
-async def create_assistant(
-    params: AssistantCreateParams,
-    settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
-) -> Assistant:
-    assistant_model = AssistantModel(
-        creator=user,
-        data=Assistant(
-            id="dummy",
-            created_at=0,
-            object="assistant",
-            **params.model_dump(exclude_unset=True),
-        ),
-    )
-    settings.session.add(assistant_model)
-    settings.session.commit()
-    return assistant_model.data
-
-
+@router.get("/assistants/{assistant_id}")
 async def retrieve_assistant(
     assistant_id: str,
     settings: Settings = Depends(get_settings),
@@ -90,6 +96,7 @@ async def retrieve_assistant(
     return assistant.data
 
 
+@router.post("/assistants/{assistant_id}")
 async def update_assistant(
     assistant_id: str,
     params: AssistantUpdateParams,
@@ -103,7 +110,7 @@ async def update_assistant(
     settings.session.commit()
     return assistant.data
 
-
+@router.delete("/assistants/{assistant_id}")
 async def delete_assistant(
     assistant_id: str,
     settings: Settings = Depends(get_settings),

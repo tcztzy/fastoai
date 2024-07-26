@@ -18,10 +18,14 @@ from ....models.message import Message
 from ....models.thread import Thread
 from ....models.user import User, get_current_active_user
 from ....requests import ThreadCreateAndRunParams
+from ....routing import OAIRouter
 from ....settings import Settings, get_settings
 from .._backend import get_ollama
 
+router = OAIRouter(tags=["Runs"])
 
+
+@router.post("/threads/runs")
 async def create_thread_and_run(
     params: ThreadCreateAndRunParams,
     user: User = Depends(get_current_active_user),

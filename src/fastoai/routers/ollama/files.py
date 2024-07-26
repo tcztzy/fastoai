@@ -7,10 +7,14 @@ from sqlmodel import select
 
 from ...models.file import File, FilePurpose
 from ...models.user import User, get_current_active_user
+from ...routing import OAIRouter
 from ...schema import ListObject
 from ...settings import Settings, get_settings
 
+router = OAIRouter(tags=["Files"])
 
+
+@router.post("/files")
 async def upload_file(
     upload_file: UploadFile,
     purpose: FilePurpose,
@@ -31,6 +35,7 @@ async def upload_file(
     return FileObject.model_validate(file_object.model_dump())
 
 
+@router.get("/files")
 async def list_files(
     user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
@@ -41,6 +46,7 @@ async def list_files(
     )
 
 
+@router.get("/files/{file_id}")
 async def retrieve_file(
     file_id: str,
     user: User = Depends(get_current_active_user),
@@ -52,6 +58,7 @@ async def retrieve_file(
     return FileObject.model_validate(file.model_dump())
 
 
+@router.get("/files/{file_id}/content")
 async def retrieve_file_content(
     file_id: str,
     user: User = Depends(get_current_active_user),
@@ -63,6 +70,7 @@ async def retrieve_file_content(
     return FileResponse(settings.upload_dir / file.id, filename=file.filename)
 
 
+@router.delete("/files/{file_id}")
 async def delete_file(
     file_id: str,
     user: User = Depends(get_current_active_user),

@@ -6,8 +6,11 @@ from ....models.message import Message
 from ....models.thread import Thread
 from ....models.user import User, get_current_active_user
 from ....requests import MessageCreateParams
+from ....routing import OAIRouter
 from ....schema import ListObject
 from ....settings import Settings, get_settings
+
+router = OAIRouter(tags=["Messages"])
 
 
 def get_thread(thread_id: str, settings: Settings = Depends(get_settings)) -> Thread:
@@ -17,6 +20,7 @@ def get_thread(thread_id: str, settings: Settings = Depends(get_settings)) -> Th
     return thread
 
 
+@router.post("/threads/{thread_id}/messages")
 async def create_message(
     thread_id: str,
     params: MessageCreateParams,
@@ -46,6 +50,7 @@ async def create_message(
     return message
 
 
+@router.get("/threads/{thread_id}/messages")
 async def list_messages(
     thread_id: str,
     settings: Settings = Depends(get_settings),

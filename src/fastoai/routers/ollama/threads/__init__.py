@@ -5,6 +5,7 @@ from sqlmodel import select
 from ....models.thread import Thread
 from ....models.user import User, get_current_active_user
 from ....requests import MessageCreateParams, ThreadCreateParams
+from ....routing import OAIRouter
 from ....schema import ListObject
 from ....settings import Settings, get_settings
 from .messages import create_message
@@ -12,7 +13,10 @@ from .runs import create_thread_and_run
 
 __all__ = ["create_thread_and_run"]
 
+router = OAIRouter(tags=["Threads"])
 
+
+@router.post("/threads")
 async def create_thread(
     params: ThreadCreateParams | None = None,
     user: User = Depends(get_current_active_user),
@@ -38,6 +42,7 @@ async def create_thread(
     return thread.data
 
 
+@router.get("/threads")
 async def list_threads(
     settings: Settings = Depends(get_settings),
     user: User = Depends(get_current_active_user),

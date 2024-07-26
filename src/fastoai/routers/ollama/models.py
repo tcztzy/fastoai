@@ -8,8 +8,11 @@ from openai.types.model_deleted import ModelDeleted
 from pydantic import BaseModel, Field
 
 from ...models.user import User, get_current_active_user
+from ...routing import OAIRouter
 from ...schema import ListObject
 from ._backend import get_ollama
+
+router = OAIRouter(tags=["Models"])
 
 
 class OllamaModel(BaseModel):
@@ -123,6 +126,7 @@ class OllamaShow(BaseModel):
     modified_at: datetime
 
 
+@router.get_models(response_model_exclude_unset=True)
 async def list_models(
     user: User = Depends(get_current_active_user),
     ollama: AsyncOllama = Depends(get_ollama),
@@ -131,6 +135,7 @@ async def list_models(
     return models.to_openai_models()
 
 
+@router.get("/models/{model:path}")
 async def retrieve_model(
     model: str,
     user: User = Depends(get_current_active_user),
@@ -147,6 +152,7 @@ async def retrieve_model(
     )
 
 
+@router.delete("/models/{model:path}")
 async def delete_model(
     model: str,
     user: User = Depends(get_current_active_user),
