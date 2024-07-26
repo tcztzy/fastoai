@@ -6,15 +6,29 @@ authors = [
     { name = "Tang Ziya", email = "tcztzy@gmail.Com" }
 ]
 dependencies = [
-    "openai>=1.35.15",
+    "openai>=1.37.0",
     "fastapi>=0.111.1",
     "pydantic-settings>=2.3.4",
+    "instructor>=1.3.5",
+    "dask>=2024.7.1",
+    "distributed>=2024.7.1",
+    "dask-jobqueue>=0.8.5",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"
 
 [project.optional-dependencies]
 ollama = ["ollama>=0.3.0"]
+beta = [
+    "orjson>=3.10.6",
+    "sqlmodel>=0.0.20",
+]
+anthropic = [
+    "anthropic>=0.31.2",
+]
+google-generativeai = [
+    "google-generativeai>=0.7.2",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -32,4 +46,3 @@ packages = ["src/fastoai"]
 
 [tool.ruff.lint]
 extend-select = ["I"]
-
