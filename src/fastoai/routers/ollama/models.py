@@ -5,7 +5,7 @@ from ollama import AsyncClient as AsyncOllama
 from openai.types import Model
 from openai.types.beta.assistant import Assistant
 from openai.types.model_deleted import ModelDeleted
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...models.user import User, get_current_active_user
 from ...routing import OAIRouter
@@ -116,6 +116,8 @@ class OllamaModelInfo(BaseModel):
 
 class OllamaShow(BaseModel):
     """Ollama show."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     license: str | None = None
     modelfile: str

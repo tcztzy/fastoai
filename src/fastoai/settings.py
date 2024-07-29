@@ -89,3 +89,6 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Get settings."""
     return Settings()
+
+
+settings = get_settings()

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
@@ -10,9 +10,6 @@ from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 from ..settings import get_settings
 from ._schema import UserSettings
 from ._utils import now, random_id_with_prefix
-
-if TYPE_CHECKING:
-    from .run import Run
 
 security = HTTPBearer()
 settings = get_settings()
@@ -33,7 +30,6 @@ class User(SQLModel, table=True):
     )
     settings: UserSettings = Field(default_factory=dict, sa_column=Column(JSON))
     api_keys: list["APIKey"] = Relationship(back_populates="user")
-    runs: list["Run"] = Relationship(back_populates="user")
 
 
 class APIKey(SQLModel, table=True):

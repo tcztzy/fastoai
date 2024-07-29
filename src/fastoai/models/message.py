@@ -26,3 +26,7 @@ class Message(SQLModel, table=True):
     def model_post_init(self, __context):
         self.data.id = self.id
         self.data.created_at = int(self.created_at.timestamp())
+        if self.run:
+            self.data.run_id = self.run_id
+        if self.assistant:
+            self.data.assistant_id = self.assistant_id

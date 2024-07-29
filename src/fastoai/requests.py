@@ -5,6 +5,7 @@ from openai import NotGiven  # noqa: F401
 from openai.resources.beta.assistants import Assistants
 from openai.resources.beta.threads import Threads
 from openai.resources.beta.threads.messages import Messages
+from openai.resources.beta.threads.runs import Runs
 from openai.resources.chat import Completions
 from openai.types.beta import (
     assistant_create_params,  # noqa: F401
@@ -19,7 +20,10 @@ from openai.types.beta.assistant_tool_choice_option_param import (
     AssistantToolChoiceOptionParam,  # noqa: F401
 )
 from openai.types.beta.assistant_tool_param import AssistantToolParam  # noqa: F401
-from openai.types.beta.threads import message_create_params  # noqa: F401
+from openai.types.beta.threads import (
+    message_create_params,  # noqa: F401
+    run_create_params,  # noqa: F401
+)
 from openai.types.beta.threads.message_content_part_param import (
     MessageContentPartParam,  # noqa: F401
 )
@@ -88,6 +92,7 @@ ThreadCreateAndRunParams: type[BaseModel] = create_pydantic_model(
 MessageCreateParams: type[BaseModel] = create_pydantic_model(
     "MessageCreateParams", Messages.create
 )
+RunCreateParams: type[BaseModel] = create_pydantic_model("RunCreateParams", Runs.create)
 
 if __name__ == "__main__":
     import json
@@ -95,4 +100,5 @@ if __name__ == "__main__":
     # print(CompletionCreateParams.model_json_schema())
     # print(ThreadCreateParams.model_json_schema())
     # print(ThreadCreateAndRunParams.model_json_schema())
-    print(json.dumps(MessageCreateParams.model_json_schema()))
+    # print(json.dumps(MessageCreateParams.model_json_schema()))
+    print(json.dumps(RunCreateParams.model_json_schema()))
