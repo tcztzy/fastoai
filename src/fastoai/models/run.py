@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from openai.types.beta.threads.run import Run as OpenAIRun
 from sqlmodel import JSON, Field, Relationship, SQLModel
 
+from ._schema import MutableRun
 from ._utils import now, random_id_with_prefix
 from .step import RunStep
 
@@ -34,7 +35,7 @@ class Run(SQLModel, table=True):
         sa_relationship_kwargs={"uselist": False}, back_populates="run"
     )
     steps: list[RunStep] = Relationship(back_populates="run")
-    data: OpenAIRun = Field(sa_type=JSON)
+    data: OpenAIRun = Field(sa_type=MutableRun.as_mutable(JSON()))
 
     def model_post_init(self, __context):
         self.data.id = self.id
@@ -44,3 +45,6 @@ class Run(SQLModel, table=True):
         super().__setattr__(name, value)
         if name == "status":
             self.data.status = RunStatus(value).value
+            setattr(
+                self.data, f"{self.data.status}_at", int(datetime.now().timestamp())
+            )

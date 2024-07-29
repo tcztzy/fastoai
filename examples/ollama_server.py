@@ -4,7 +4,7 @@ from fastoai.requests import CompletionCreateParams
 from fastoai.routers.ollama import router
 from openai import AsyncOpenAI
 
-app = FastOAI()
+app = FastOAI(root_path="/v1")
 
 
 @app.post_chat_completions
@@ -23,6 +23,7 @@ async def create_chat_completions(params: CompletionCreateParams):
 
         return StreamingResponse(_stream())
     return response
+
 
 # Order matters, you should firstly define your own entrypoint functions, then
 # include the existing router in order to override the original process with

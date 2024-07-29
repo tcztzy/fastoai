@@ -10,7 +10,6 @@ from ollama import AsyncClient
 from ollama._types import Message as OllamaMessage
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
-from openai.types.beta.threads.run import Run as OpenAIRun
 from openai.types.beta.threads.runs.message_creation_step_details import (
     MessageCreation,
     MessageCreationStepDetails,
@@ -19,6 +18,7 @@ from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.beta.threads.text_content_block import TextContentBlock
 from pydantic import BaseModel
 
+from ....models._schema import MutableRun
 from ....models.assistant import Assistant
 from ....models.message import Message
 from ....models.run import Run
@@ -55,16 +55,16 @@ def run_decorator(run_model: Run):
                 ):
                     async for value in generator_func(*args, **kwargs):
                         yield value
-                    else:
-                        run_model.status = "completed"
-                        settings.session.add(run_model)
-                        settings.session.commit()
-                        yield str(
-                            EventData(
-                                event=f"{run_model.data.object}.completed",
-                                data=run_model.data,
-                            )
+
+                    run_model.status = "completed"
+                    settings.session.add(run_model)
+                    settings.session.commit()
+                    yield str(
+                        EventData(
+                            event=f"{run_model.data.object}.completed",
+                            data=run_model.data,
                         )
+                    )
             except TimeoutError:
                 run_model.status = "expired"
                 settings.session.add(run_model)
@@ -150,7 +150,7 @@ async def create_run(
     run = Run(
         assistant_id=assistant.id,
         thread_id=thread.id,
-        data=OpenAIRun(
+        data=MutableRun(
             id="dummy",
             created_at=0,
             object="thread.run",
@@ -186,6 +186,7 @@ async def create_run(
                 thread_id=thread.id,
             ),
         )
+        settings.session.add(message)
         step = RunStep(
             run_id=run.id,
             assistant_id=assistant.id,
@@ -211,7 +212,6 @@ async def create_run(
         settings.session.refresh(step)
         yield str(EventData(event=f"{step.data.object}.in_progress", data=step.data))
         yield str(EventData(event=f"{message.data.object}.created", data=message.data))
-        settings.session.add(message)
         settings.session.commit()
         settings.session.refresh(message)
         yield "event: thread.message.in_progress\n"
