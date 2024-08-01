@@ -2,8 +2,7 @@ from fastapi import Depends
 from openai.types.beta.thread import Thread as OpenAIThread
 from sqlmodel import select
 
-from ....models.thread import Thread
-from ....models.user import User, get_current_active_user
+from ....models import Thread, User, get_current_active_user
 from ....requests import MessageCreateParams, ThreadCreateParams
 from ....routing import OAIRouter
 from ....schema import ListObject

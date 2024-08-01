@@ -2,12 +2,11 @@ from functools import cached_property, lru_cache
 from pathlib import Path
 from typing import Literal
 
-import orjson
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from sqlmodel import Session, SQLModel, create_engine
 
-from .models import OBJECT_TYPES
+from .serde import json_deserializer, json_serializer
 
 
 class AnthropicSettings(BaseSettings, env_prefix="anthropic_"):
@@ -48,6 +47,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///"
     upload_dir: Path = Path.home() / ".fastoai" / "uploads"
     auth_enabled: bool = False
+    generate_models: bool = True
 
     def model_post_init(self, __context):
         self.upload_dir.mkdir(parents=True, exist_ok=True)
@@ -55,26 +55,10 @@ class Settings(BaseSettings):
     @cached_property
     def engine(self):
         """Get engine."""
-
-        def serialize_pydantic_model(model: BaseModel) -> str:
-            return model.model_dump_json()
-
-        def deserialize_pydantic_model(data: str) -> BaseModel | None:
-            # Try deserializing with each model until one works.
-            # This is a pretty ugly solution but the deserialization seems to only be possible and reliable at an engine level
-            # and we need to know the model to deserialize it properly
-            # We would need to keep adding more of these if we add more models with JSON fields.
-            json_data = orjson.loads(data)
-            if "object" in json_data:
-                object_type = json_data["object"]
-                if object_type in OBJECT_TYPES:
-                    return OBJECT_TYPES[object_type].model_validate(json_data)
-            return None
-
         e = create_engine(
             self.database_url,
-            json_serializer=serialize_pydantic_model,
-            json_deserializer=deserialize_pydantic_model,
+            json_serializer=json_serializer,
+            json_deserializer=json_deserializer,
         )
         SQLModel.metadata.create_all(e)
         return e

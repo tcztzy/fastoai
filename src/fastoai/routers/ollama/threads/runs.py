@@ -18,13 +18,15 @@ from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.beta.threads.text_content_block import TextContentBlock
 from pydantic import BaseModel
 
-from ....models._schema import MutableRun
-from ....models.assistant import Assistant
-from ....models.message import Message
-from ....models.run import Run
-from ....models.step import RunStep
-from ....models.thread import Thread
-from ....models.user import User, get_current_active_user
+from ....models import (
+    Assistant,
+    Message,
+    Run,
+    RunStep,
+    Thread,
+    User,
+    get_current_active_user,
+)
 from ....requests import RunCreateParams
 from ....routing import OAIRouter
 from ....settings import Settings, get_settings, settings
@@ -161,7 +163,7 @@ async def create_run(
         ),
     )
     messages: list[OllamaMessage] = []
-    instructions = run.data.instructions or assistant.data.instructions
+    instructions = run.instructions or assistant.instructions
     if instructions:
         messages.append({"role": "system", "content": instructions})
     messages.extend(

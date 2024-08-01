@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 
-from ...models.user import User, get_current_active_user
+from ...models import User, get_current_active_user
 from ...requests import (
     CompletionCreateParams,
 )
@@ -22,6 +22,7 @@ from .threads.runs import router as runs_router
 router = OAIRouter()
 
 chat_router = OAIRouter(tags=["Chat"])
+
 
 @chat_router.post_chat_completions
 async def create_chat_completions(
@@ -40,6 +41,7 @@ async def create_chat_completions(
 
         return StreamingResponse(_stream())
     return cast(ChatCompletion, response)
+
 
 router.include_router(chat_router)
 router.include_router(models_router)

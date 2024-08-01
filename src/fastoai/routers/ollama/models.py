@@ -7,7 +7,7 @@ from openai.types.beta.assistant import Assistant
 from openai.types.model_deleted import ModelDeleted
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...models.user import User, get_current_active_user
+from ...models import User, get_current_active_user
 from ...routing import OAIRouter
 from ...schema import ListObject
 from ._backend import get_ollama

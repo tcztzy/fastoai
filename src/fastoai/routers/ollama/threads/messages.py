@@ -2,9 +2,7 @@ from fastapi import Depends, HTTPException
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from sqlmodel import select
 
-from ....models.message import Message
-from ....models.thread import Thread
-from ....models.user import User, get_current_active_user
+from ....models import Message, Thread, User, get_current_active_user
 from ....requests import MessageCreateParams
 from ....routing import OAIRouter
 from ....schema import ListObject
