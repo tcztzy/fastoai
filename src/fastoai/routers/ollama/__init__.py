@@ -43,10 +43,13 @@ async def create_chat_completions(
     return cast(ChatCompletion, response)
 
 
-router.include_router(chat_router)
-router.include_router(models_router)
-router.include_router(files_router)
-router.include_router(assistants_router)
-router.include_router(threads_router)
-router.include_router(messages_router)
-router.include_router(runs_router)
+for subrouter in [
+    chat_router,
+    models_router,
+    files_router,
+    assistants_router,
+    threads_router,
+    messages_router,
+    runs_router,
+]:
+    router.include_router(subrouter)

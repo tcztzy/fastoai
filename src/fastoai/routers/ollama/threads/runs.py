@@ -22,6 +22,7 @@ from ....models import (
     Assistant,
     Message,
     Run,
+    RunStatus,
     RunStep,
     Thread,
     User,
@@ -31,6 +32,7 @@ from ....requests import RunCreateParams
 from ....routing import OAIRouter
 from ....settings import Settings, get_settings, settings
 from .._backend import get_ollama
+from .._fix import MetadataRenameRoute
 
 
 @dataclass
@@ -46,14 +48,12 @@ def run_decorator(run_model: Run):
     def event_decorator(generator_func):
         @wraps(generator_func)
         async def wrapper(*args, **kwargs):
-            yield str(
-                EventData(event=f"{run_model.data.object}.created", data=run_model.data)
-            )
+            yield str(EventData(event=f"{run_model.object}.created", data=run_model))
             try:
                 async with timeout(
                     None
-                    if run_model.data.expires_at is None
-                    else run_model.data.expires_at - datetime.now().timestamp()
+                    if run_model.expires_at is None
+                    else run_model.expires_at - datetime.now().timestamp()
                 ):
                     async for value in generator_func(*args, **kwargs):
                         yield value
@@ -63,8 +63,8 @@ def run_decorator(run_model: Run):
                     settings.session.commit()
                     yield str(
                         EventData(
-                            event=f"{run_model.data.object}.completed",
-                            data=run_model.data,
+                            event=f"{run_model.object}.completed",
+                            data=run_model,
                         )
                     )
             except TimeoutError:
@@ -72,23 +72,15 @@ def run_decorator(run_model: Run):
                 settings.session.add(run_model)
                 settings.session.commit()
                 yield str(
-                    EventData(
-                        event=f"{run_model.data.object}.expired", data=run_model.data
-                    )
+                    EventData(event=f"{run_model.object}.expired", data=run_model)
                 )
             except Exception as e:
                 print(e)
                 run_model.status = "failed"
-                run_model.data.last_error = LastError(
-                    code="server_error", message=str(e)
-                )
+                run_model.last_error = LastError(code="server_error", message=str(e))
                 settings.session.add(run_model)
                 settings.session.commit()
-                yield str(
-                    EventData(
-                        event=f"{run_model.data.object}.failed", data=run_model.data
-                    )
-                )
+                yield str(EventData(event=f"{run_model.object}.failed", data=run_model))
             yield "event: done\ndata: [DONE]\n"
 
         return wrapper
@@ -96,7 +88,7 @@ def run_decorator(run_model: Run):
     return event_decorator
 
 
-router = OAIRouter(tags=["Runs"])
+router = OAIRouter(tags=["Runs"], route_class=MetadataRenameRoute)
 
 
 def from_openai_message_to_ollama_message(message: OpenAIMessage) -> OllamaMessage:
@@ -129,20 +121,20 @@ class OllamaMessageDelta(BaseModel):
 @router.post("/threads/{thread_id}/runs")
 async def create_run(
     thread_id: str,
-    params: RunCreateParams,  # type: ignore
+    params: RunCreateParams,
     settings: Settings = Depends(get_settings),
     user: User = Depends(get_current_active_user),
     ollama: AsyncClient = Depends(get_ollama),
 ):
-    if not params.stream:  # type: ignore[attr-defined]
+    if not params.stream:
         raise NotImplementedError("Non-streaming is not yet supported")
-    assistant = settings.session.get(Assistant, params.assistant_id)  # type: ignore[attr-defined]
+    assistant = settings.session.get(Assistant, params.assistant_id)
     if assistant is None:
         raise HTTPException(status_code=404, detail="Assistant not found")
     thread = settings.session.get(Thread, thread_id)
     if thread is None:
         raise HTTPException(status_code=404, detail="Thread not found")
-    openai_run_args = {k: v for k, v in params.model_dump().items() if v}  # type: ignore[attr-defined]
+    openai_run_args = {k: v for k, v in params.model_dump().items() if v}
     if "instructions" not in openai_run_args:
         openai_run_args["instructions"] = ""
     if "parallel_tool_calls" not in openai_run_args:
@@ -150,27 +142,18 @@ async def create_run(
     if "tools" not in openai_run_args:
         openai_run_args["tools"] = []
     run = Run(
-        assistant_id=assistant.id,
-        thread_id=thread.id,
-        data=MutableRun(
-            id="dummy",
-            created_at=0,
-            object="thread.run",
-            thread_id=thread.id,
-            status="queued",
-            model=assistant.data.model,
-            **openai_run_args,
-        ),
+        assistant=assistant,
+        thread=thread,
+        status=RunStatus.queued,
+        model=assistant.model,
+        **openai_run_args,
     )
     messages: list[OllamaMessage] = []
     instructions = run.instructions or assistant.instructions
     if instructions:
         messages.append({"role": "system", "content": instructions})
     messages.extend(
-        [
-            from_openai_message_to_ollama_message(message.data)
-            for message in thread.messages
-        ]
+        [from_openai_message_to_ollama_message(message) for message in thread.messages]
     )
 
     async def message_creation_step():
@@ -208,18 +191,18 @@ async def create_run(
                 ),
             ),
         )
-        yield str(EventData(event=f"{step.data.object}.created", data=step.data))
+        yield str(EventData(event=f"{step.object}.created", data=step))
         settings.session.add(step)
         settings.session.commit()
         settings.session.refresh(step)
-        yield str(EventData(event=f"{step.data.object}.in_progress", data=step.data))
-        yield str(EventData(event=f"{message.data.object}.created", data=message.data))
+        yield str(EventData(event=f"{step.object}.in_progress", data=step))
+        yield str(EventData(event=f"{message.object}.created", data=message))
         settings.session.commit()
         settings.session.refresh(message)
         yield "event: thread.message.in_progress\n"
-        yield f"data: {message.data.model_dump_json()}\n\n"
+        yield f"data: {message.model_dump_json()}\n\n"
         async for part in await ollama.chat(
-            model=assistant.data.model,
+            model=assistant.model,
             messages=messages,
             stream=True,
         ):
@@ -252,9 +235,9 @@ async def create_run(
         settings.session.add(run)
         settings.session.commit()
         settings.session.refresh(run)
-        yield str(EventData(event=f"{run.data.object}.queued", data=run.data))
+        yield str(EventData(event=f"{run.object}.queued", data=run))
 
-        yield str(EventData(event=f"{run.data.object}.in_progress", data=run.data))
+        yield str(EventData(event=f"{run.object}.in_progress", data=run))
         async for message in message_creation_step():
             yield message
 

@@ -7,8 +7,9 @@ from ....requests import MessageCreateParams
 from ....routing import OAIRouter
 from ....schema import ListObject
 from ....settings import Settings, get_settings
+from .._fix import MetadataRenameRoute
 
-router = OAIRouter(tags=["Messages"])
+router = OAIRouter(tags=["Messages"], route_class=MetadataRenameRoute)
 
 
 def get_thread(thread_id: str, settings: Settings = Depends(get_settings)) -> Thread:

@@ -1,5 +1,4 @@
 from fastapi import Depends
-from openai.types.beta.thread import Thread as OpenAIThread
 from sqlmodel import select
 
 from ....models import Thread, User, get_current_active_user
@@ -7,27 +6,26 @@ from ....requests import MessageCreateParams, ThreadCreateParams
 from ....routing import OAIRouter
 from ....schema import ListObject
 from ....settings import Settings, get_settings
+from .._fix import MetadataRenameRoute
 from .messages import create_message
 
-router = OAIRouter(tags=["Threads"])
+router = OAIRouter(tags=["Threads"], route_class=MetadataRenameRoute)
 
 
 @router.post("/threads")
 async def create_thread(
-    params: ThreadCreateParams | None = None,  # type: ignore
+    params: ThreadCreateParams | None = None,
     user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
-) -> OpenAIThread:
-    openai_thread = OpenAIThread(id="dummy", created_at=0, object="thread")
-    if params is not None:
-        if params.tool_resources:
-            openai_thread.tool_resources = params.tool_resources
-        if params.metadata:
-            openai_thread.metadata = params.metadata
-    thread = Thread(data=openai_thread)
+) -> Thread:
+    thread = Thread.model_validate(
+        {}
+        if params is None
+        else params.model_dump(exclude={"messages"}, exclude_none=True)
+    )
     settings.session.add(thread)
     settings.session.commit()
-    for message in params.messages or []:  # type: ignore[union-attr]
+    for message in params.messages if params is not None else []:
         await create_message(
             thread_id=thread.id,
             params=MessageCreateParams.model_validate(message),
@@ -35,13 +33,13 @@ async def create_thread(
             settings=settings,
         )
     settings.session.refresh(thread)
-    return thread.data
+    return thread
 
 
 @router.get("/threads")
 async def list_threads(
     settings: Settings = Depends(get_settings),
     user: User = Depends(get_current_active_user),
-) -> ListObject[OpenAIThread]:
+) -> ListObject[Thread]:
     threads = settings.session.exec(select(Thread)).all()
-    return ListObject[OpenAIThread](data=[thread.data for thread in threads])
+    return ListObject[Thread](data=threads)

@@ -32,7 +32,6 @@ async def upload_file(
     settings.session.add(file_object)
     settings.session.commit()
     settings.session.refresh(file_object)
-    print(file_object.model_dump())
     return FileObject.model_validate(file_object.model_dump())
 
 

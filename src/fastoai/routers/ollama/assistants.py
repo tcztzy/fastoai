@@ -10,8 +10,9 @@ from ...requests import AssistantCreateParams, AssistantUpdateParams
 from ...routing import OAIRouter
 from ...schema import ListObject
 from ...settings import Settings, get_settings
+from ._fix import MetadataRenameRoute
 
-router = OAIRouter(tags=["Assistants"])
+router = OAIRouter(tags=["Assistants"], route_class=MetadataRenameRoute)
 
 
 @router.post_assistants(response_model_exclude_unset=True, response_model_by_alias=True)
@@ -22,7 +23,6 @@ async def create_assistant(
 ) -> Assistant:
     obj = params.model_dump(exclude_unset=True)
     obj["tools"] = list(obj["tools"])
-    print(obj)
     assistant = Assistant.model_validate(obj)
     assistant.tools = list(assistant.tools)
     settings.session.add(assistant)
@@ -86,7 +86,6 @@ async def retrieve_assistant(
     assistant = settings.session.get(Assistant, assistant_id)
     if assistant is None:
         raise HTTPException(status_code=404, detail="Assistant not found")
-    print(assistant.model_dump())
     return assistant
 
 
