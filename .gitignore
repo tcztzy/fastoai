@@ -12,3 +12,6 @@ wheels/
 .python-version
 requirements-dev.lock
 requirements.lock
+
+# sqlite3
+*.sqlite3
