@@ -283,16 +283,16 @@ class Run(Base, MetadataMixin, table=True):
     execution of this run.
     """
 
-    cancelled_at: int | None = None
+    cancelled_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run was cancelled."""
 
-    completed_at: int | None = None
+    completed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run was completed."""
 
-    expires_at: int | None = None
+    expires_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run will expire."""
 
-    failed_at: int | None = None
+    failed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run failed."""
 
     incomplete_details: RunIncompleteDetails | None = Field(None, sa_type=JSON)
@@ -369,7 +369,7 @@ class Run(Base, MetadataMixin, table=True):
     max context length.
     """
 
-    started_at: int | None = None
+    started_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run was started."""
 
     status: RunStatus
@@ -422,6 +422,14 @@ class Run(Base, MetadataMixin, table=True):
     top_p: float | None = None
     """The nucleus sampling value used for this run. If not set, defaults to 1."""
 
+    @field_serializer(
+        "cancelled_at", "completed_at", "expires_at", "failed_at", "started_at"
+    )
+    def serialize_started_at(self, value: datetime | None) -> int | None:
+        if value is None:
+            return None
+        return int(value.timestamp())
+
     assistant: Assistant = Relationship(back_populates="runs")
 
     thread: Thread = Relationship(back_populates="runs")
@@ -458,13 +466,13 @@ class Message(Base, MetadataMixin, table=True):
     attachments: list[Attachment] | None = Field(default=None, sa_column=Column(JSON))
     """A list of files attached to the message, and the tools they were added to."""
 
-    completed_at: int | None = None
+    completed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the message was completed."""
 
     content: list[MessageContent] = Field(default_factory=list, sa_column=Column(JSON))
     """The content of the message in array of text and/or images."""
 
-    incomplete_at: int | None = None
+    incomplete_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the message was marked as incomplete."""
 
     incomplete_details: MessageIncompleteDetails | None = Field(None, sa_type=JSON)
@@ -497,6 +505,12 @@ class Message(Base, MetadataMixin, table=True):
     this message belongs to.
     """
 
+    @field_serializer("completed_at", "incomplete_at")
+    def serialize_incomplete_at(self, value: datetime | None) -> int | None:
+        if value is None:
+            return None
+        return int(value.timestamp())
+
     assistant: Assistant = Relationship(back_populates="messages")
 
     thread: Thread = Relationship(back_populates="messages")
@@ -528,19 +542,19 @@ class RunStep(Base, MetadataMixin, table=True):
     associated with the run step.
     """
 
-    cancelled_at: int | None = None
+    cancelled_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run step was cancelled."""
 
-    completed_at: int | None = None
+    completed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run step completed."""
 
-    expired_at: int | None = None
+    expired_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run step expired.
 
     A step is considered expired if the parent run is expired.
     """
 
-    failed_at: int | None = None
+    failed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run step failed."""
 
     last_error: RunStepLastError | None = Field(None, sa_type=JSON)
@@ -583,6 +597,12 @@ class RunStep(Base, MetadataMixin, table=True):
 
     This value will be `null` while the run step's status is `in_progress`.
     """
+
+    @field_serializer("cancelled_at", "completed_at", "expired_at", "failed_at")
+    def serialize_failed_at(self, value: datetime | None) -> int | None:
+        if value is None:
+            return None
+        return int(value.timestamp())
 
     run: Run = Relationship(back_populates="steps")
 

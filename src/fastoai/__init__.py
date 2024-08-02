@@ -246,6 +246,29 @@ def get_current_active_user(
         src = re.sub(
             r'\n {4}created_at: int\n {4}""".*"""\n', "", src, flags=re.MULTILINE
         )
+        timestamps = re.findall(r"(\w+_at): int \| None = None", src)
+        for timestamp in timestamps:
+            src = re.sub(
+                rf"{timestamp}: int \| None = None",
+                f"{timestamp}: datetime | None = None",
+                src,
+            )
+        if len(timestamps) > 0:
+            fields = ", ".join(f'"{timestamp}"' for timestamp in timestamps)
+            if len(fields) + len("    @field_serializer()") > 88:
+                if len(fields) + 8 <= 88:
+                    fields = f"\n        {fields}\n    "
+                else:
+                    fields = ",\n        ".join(
+                        f'"{timestamp}"' for timestamp in timestamps
+                    )
+            src += f"""
+    @field_serializer({fields})
+    def serialize_{timestamp}(self, value: datetime | None) -> int | None:
+        if value is None:
+            return None
+        return int(value.timestamp())
+"""
         src = re.sub(
             r"[a-z]\w*: list\[[A-Za-z]\w*\](?! \|)",
             r"\g<0> = Field(default_factory=list, sa_column=Column(JSON))",
