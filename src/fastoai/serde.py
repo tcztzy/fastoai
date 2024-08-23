@@ -1,13 +1,15 @@
 from typing import Any, Generic, TypeVar, get_args
 
 import orjson
-from openai.types.beta.assistant_response_format import (
-    AssistantResponseFormat,
-)
 from openai.types.beta.assistant_response_format_option import (
     AssistantResponseFormatOption,
 )
 from openai.types.beta.assistant_tool import AssistantTool
+from openai.types.shared_params import (
+    ResponseFormatJSONObject,
+    ResponseFormatJSONSchema,
+    ResponseFormatText,
+)
 from pydantic import BaseModel
 
 T = TypeVar("T")
@@ -40,7 +42,12 @@ def json_serializer(model: Any) -> str | None:
                 ).model_dump_json()
             else:
                 raise ValueError(f"Invalid model type:{type(model)} value={model}")
-        case AssistantResponseFormat() | "none" | "auto":
+        case (
+            "auto"
+            | ResponseFormatText()
+            | ResponseFormatJSONObject()
+            | ResponseFormatJSONSchema()
+        ):
             return Object[AssistantResponseFormatOption](
                 object="AssistantResponseFormatOption", data=model
             ).model_dump_json()

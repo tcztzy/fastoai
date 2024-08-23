@@ -499,6 +499,7 @@ from openai.types.chat.completion_create_params import (
     FunctionCall,
     ResponseFormat,
 )
+from openai.types.shared_params import ResponseFormatText
 from pydantic import BaseModel
 """
     body = []
@@ -562,7 +563,7 @@ from pydantic import BaseModel
                     "parallel_tool_calls: .+", "parallel_tool_calls: bool = True", src
                 )
                 src = re.sub(
-                    "response_format: .+", r'\g<0> = ResponseFormat(type="text")', src
+                    "response_format: .+", r"\g<0> = ResponseFormatText()", src
                 )
                 src = re.sub("tool_choice: .+", r"\g<0> | None = None", src)
                 src = re.sub("tools: .+", r"\g<0> = []", src)

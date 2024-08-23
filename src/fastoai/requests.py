@@ -29,6 +29,7 @@ from openai.types.chat.completion_create_params import (
     FunctionCall,
     ResponseFormat,
 )
+from openai.types.shared_params import ResponseFormatText
 from pydantic import BaseModel
 
 
@@ -69,6 +70,11 @@ class AssistantCreateParams(BaseModel):
     Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
     [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+
+    Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+    Outputs which guarantees the model will match your supplied JSON schema. Learn
+    more in the
+    [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
     Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
     message the model generates is valid JSON.
@@ -151,6 +157,11 @@ class AssistantUpdateParams(BaseModel):
     Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
     [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+
+    Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+    Outputs which guarantees the model will match your supplied JSON schema. Learn
+    more in the
+    [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
     Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
     message the model generates is valid JSON.
@@ -318,6 +329,11 @@ class RunCreateParams(BaseModel):
     [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
+    Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+    Outputs which guarantees the model will match your supplied JSON schema. Learn
+    more in the
+    [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+
     Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
     message the model generates is valid JSON.
 
@@ -467,12 +483,18 @@ class CompletionCreateParams(BaseModel):
     [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation/parameter-details)
     """
 
-    response_format: ResponseFormat = ResponseFormat(type="text")
+    response_format: ResponseFormat = ResponseFormatText()
     """An object specifying the format that the model must output.
 
-    Compatible with
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
+    [GPT-4o mini](https://platform.openai.com/docs/models/gpt-4o-mini),
     [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and
     all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
+
+    Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+    Outputs which guarantees the model will match your supplied JSON schema. Learn
+    more in the
+    [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
     Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
     message the model generates is valid JSON.
