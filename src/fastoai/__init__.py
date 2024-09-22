@@ -486,6 +486,7 @@ from openai.types.beta.threads.run_create_params import (
     AdditionalMessage,
     TruncationStrategy,
 )
+from openai.types.beta.threads.runs.run_step_include import RunStepInclude
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from openai.types.chat.chat_completion_stream_options_param import (
     ChatCompletionStreamOptionsParam,
@@ -556,7 +557,7 @@ from pydantic import BaseModel
                     "CompletionCreateParamsBase", "CompletionCreateParams", src
                 )
                 src = re.sub(
-                    "messages: .+", "message: list[ChatCompletionMessageParam]", src
+                    "messages: .+", "messages: list[ChatCompletionMessageParam]", src
                 )
                 src = re.sub("model: .+", "model: str", src)
                 src = re.sub(

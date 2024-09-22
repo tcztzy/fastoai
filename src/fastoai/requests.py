@@ -16,6 +16,7 @@ from openai.types.beta.threads.run_create_params import (
     AdditionalMessage,
     TruncationStrategy,
 )
+from openai.types.beta.threads.runs.run_step_include import RunStepInclude
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from openai.types.chat.chat_completion_stream_options_param import (
     ChatCompletionStreamOptionsParam,
@@ -264,6 +265,18 @@ class RunCreateParams(BaseModel):
     execute this run.
     """
 
+    include: list[RunStepInclude]
+    """A list of additional fields to include in the response.
+
+    Currently the only supported value is
+    `step_details.tool_calls[*].file_search.results[*].content` to fetch the file
+    search result content.
+
+    See the
+    [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+    for more information.
+    """
+
     additional_instructions: str | None = None
     """Appends additional instructions at the end of the instructions for the run.
 
@@ -389,7 +402,7 @@ class RunCreateParams(BaseModel):
 
 
 class CompletionCreateParams(BaseModel):
-    message: list[ChatCompletionMessageParam]
+    messages: list[ChatCompletionMessageParam]
     """A list of messages comprising the conversation so far.
 
     [Example Python code](https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models).
