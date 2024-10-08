@@ -59,7 +59,7 @@ class AssistantCreateParams(BaseModel):
 
     This can be useful for storing additional information about the object in a
     structured format. Keys can be a maximum of 64 characters long and values can be
-    a maxium of 512 characters long.
+    a maximum of 512 characters long.
     """
 
     name: str | None = None
@@ -73,11 +73,11 @@ class AssistantCreateParams(BaseModel):
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-    Outputs which guarantees the model will match your supplied JSON schema. Learn
-    more in the
+    Outputs which ensures the model will match your supplied JSON schema. Learn more
+    in the
     [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-    Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+    Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
     message the model generates is valid JSON.
 
     **Important:** when using JSON mode, you **must** also instruct the model to
@@ -136,7 +136,7 @@ class AssistantUpdateParams(BaseModel):
 
     This can be useful for storing additional information about the object in a
     structured format. Keys can be a maximum of 64 characters long and values can be
-    a maxium of 512 characters long.
+    a maximum of 512 characters long.
     """
 
     model: str
@@ -160,11 +160,11 @@ class AssistantUpdateParams(BaseModel):
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-    Outputs which guarantees the model will match your supplied JSON schema. Learn
-    more in the
+    Outputs which ensures the model will match your supplied JSON schema. Learn more
+    in the
     [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-    Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+    Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
     message the model generates is valid JSON.
 
     **Important:** when using JSON mode, you **must** also instruct the model to
@@ -220,7 +220,7 @@ class ThreadCreateParams(BaseModel):
 
     This can be useful for storing additional information about the object in a
     structured format. Keys can be a maximum of 64 characters long and values can be
-    a maxium of 512 characters long.
+    a maximum of 512 characters long.
     """
 
     tool_resources: ToolResources | None = None
@@ -253,7 +253,7 @@ class MessageCreateParams(BaseModel):
 
     This can be useful for storing additional information about the object in a
     structured format. Keys can be a maximum of 64 characters long and values can be
-    a maxium of 512 characters long.
+    a maximum of 512 characters long.
     """
 
 
@@ -317,7 +317,7 @@ class RunCreateParams(BaseModel):
 
     This can be useful for storing additional information about the object in a
     structured format. Keys can be a maximum of 64 characters long and values can be
-    a maxium of 512 characters long.
+    a maximum of 512 characters long.
     """
 
     model: str
@@ -343,11 +343,11 @@ class RunCreateParams(BaseModel):
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-    Outputs which guarantees the model will match your supplied JSON schema. Learn
-    more in the
+    Outputs which ensures the model will match your supplied JSON schema. Learn more
+    in the
     [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-    Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+    Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
     message the model generates is valid JSON.
 
     **Important:** when using JSON mode, you **must** also instruct the model to
@@ -405,7 +405,11 @@ class CompletionCreateParams(BaseModel):
     messages: list[ChatCompletionMessageParam]
     """A list of messages comprising the conversation so far.
 
-    [Example Python code](https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models).
+    Depending on the [model](https://platform.openai.com/docs/models) you use,
+    different message types (modalities) are supported, like
+    [text](https://platform.openai.com/docs/guides/text-generation),
+    [images](https://platform.openai.com/docs/guides/vision), and
+    [audio](https://platform.openai.com/docs/guides/audio).
     """
 
     model: str
@@ -462,15 +466,28 @@ class CompletionCreateParams(BaseModel):
     `content` of `message`.
     """
 
+    max_completion_tokens: int | None = None
+    """
+    An upper bound for the number of tokens that can be generated for a completion,
+    including visible output tokens and
+    [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+    """
+
     max_tokens: int | None = None
     """
     The maximum number of [tokens](/tokenizer) that can be generated in the chat
-    completion.
+    completion. This value can be used to control
+    [costs](https://openai.com/api/pricing/) for text generated via API.
 
-    The total length of input tokens and generated tokens is limited by the model's
-    context length.
-    [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken)
-    for counting tokens.
+    This value is now deprecated in favor of `max_completion_tokens`, and is not
+    compatible with
+    [o1 series models](https://platform.openai.com/docs/guides/reasoning).
+    """
+
+    metadata: dict[str, str] | None = None
+    """
+    Developer-defined tags and values used for filtering completions in the
+    [dashboard](https://platform.openai.com/completions).
     """
 
     n: int | None = None
@@ -505,11 +522,11 @@ class CompletionCreateParams(BaseModel):
     all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-    Outputs which guarantees the model will match your supplied JSON schema. Learn
-    more in the
+    Outputs which ensures the model will match your supplied JSON schema. Learn more
+    in the
     [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-    Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+    Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
     message the model generates is valid JSON.
 
     **Important:** when using JSON mode, you **must** also instruct the model to
@@ -535,8 +552,11 @@ class CompletionCreateParams(BaseModel):
 
     This parameter is relevant for customers subscribed to the scale tier service:
 
-    - If set to 'auto', the system will utilize scale tier credits until they are
-      exhausted.
+    - If set to 'auto', and the Project is Scale tier enabled, the system will
+      utilize scale tier credits until they are exhausted.
+    - If set to 'auto', and the Project is not Scale tier enabled, the request will
+      be processed using the default service tier with a lower uptime SLA and no
+      latency guarentee.
     - If set to 'default', the request will be processed using the default service
       tier with a lower uptime SLA and no latency guarentee.
     - When not set, the default behavior is 'auto'.
@@ -547,6 +567,12 @@ class CompletionCreateParams(BaseModel):
 
     stop: str | list[str] | None = None
     """Up to 4 sequences where the API will stop generating further tokens."""
+
+    store: bool | None = None
+    """
+    Whether or not to store the output of this completion request for traffic
+    logging in the [dashboard](https://platform.openai.com/completions).
+    """
 
     stream_options: ChatCompletionStreamOptionsParam | None = None
     """Options for streaming response. Only set this when you set `stream: true`."""
