@@ -6,8 +6,8 @@ authors = [
     { name = "Tang Ziya", email = "tcztzy@gmail.Com" }
 ]
 dependencies = [
-    "openai>=1.51.1",
-    "fastapi[standard]>=0.115.0",
+    "openai>=1.51.2",
+    "fastapi[standard]>=0.115.2",
     "pydantic[email]>=2.9.2",
     "pydantic-settings>=2.5.2",
 ]
@@ -20,12 +20,9 @@ beta = [
     "orjson>=3.10.7",
     "sqlmodel>=0.0.22",
 ]
-anthropic = [
-    "anthropic>=0.35.0",
-]
-google-generativeai = [
-    "google-generativeai>=0.8.3",
-]
+anthropic = ["anthropic>=0.36.1"]
+google-generativeai = ["google-generativeai>=0.8.3"]
+vllm = ["vllm>=0.6.3"]
 
 [build-system]
 requires = ["hatchling"]
