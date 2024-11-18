@@ -117,8 +117,8 @@ class Assistant(Base, MetadataMixin, table=True):
     You can use the
     [List models](https://platform.openai.com/docs/api-reference/models/list) API to
     see all of your available models, or see our
-    [Model overview](https://platform.openai.com/docs/models/overview) for
-    descriptions of them.
+    [Model overview](https://platform.openai.com/docs/models) for descriptions of
+    them.
     """
 
     name: str | None = None
@@ -139,8 +139,8 @@ class Assistant(Base, MetadataMixin, table=True):
     response_format: AssistantResponseFormatOption | None = Field(None, sa_type=JSON)
     """Specifies the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -343,7 +343,7 @@ class Run(Base, MetadataMixin, table=True):
     parallel_tool_calls: bool
     """
     Whether to enable
-    [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+    [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
     during tool use.
     """
 
@@ -358,8 +358,8 @@ class Run(Base, MetadataMixin, table=True):
     )
     """Specifies the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured

@@ -487,7 +487,12 @@ from openai.types.beta.threads.run_create_params import (
     TruncationStrategy,
 )
 from openai.types.beta.threads.runs.run_step_include import RunStepInclude
+from openai.types.chat.chat_completion_audio_param import ChatCompletionAudioParam
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat.chat_completion_modality import ChatCompletionModality
+from openai.types.chat.chat_completion_prediction_content_param import (
+    ChatCompletionPredictionContentParam,
+)
 from openai.types.chat.chat_completion_stream_options_param import (
     ChatCompletionStreamOptionsParam,
 )

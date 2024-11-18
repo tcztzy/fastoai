@@ -17,7 +17,12 @@ from openai.types.beta.threads.run_create_params import (
     TruncationStrategy,
 )
 from openai.types.beta.threads.runs.run_step_include import RunStepInclude
+from openai.types.chat.chat_completion_audio_param import ChatCompletionAudioParam
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat.chat_completion_modality import ChatCompletionModality
+from openai.types.chat.chat_completion_prediction_content_param import (
+    ChatCompletionPredictionContentParam,
+)
 from openai.types.chat.chat_completion_stream_options_param import (
     ChatCompletionStreamOptionsParam,
 )
@@ -41,8 +46,8 @@ class AssistantCreateParams(BaseModel):
     You can use the
     [List models](https://platform.openai.com/docs/api-reference/models/list) API to
     see all of your available models, or see our
-    [Model overview](https://platform.openai.com/docs/models/overview) for
-    descriptions of them.
+    [Model overview](https://platform.openai.com/docs/models) for descriptions of
+    them.
     """
 
     description: str | None = None
@@ -68,8 +73,8 @@ class AssistantCreateParams(BaseModel):
     response_format: AssistantResponseFormatOptionParam | None = None
     """Specifies the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -145,8 +150,8 @@ class AssistantUpdateParams(BaseModel):
     You can use the
     [List models](https://platform.openai.com/docs/api-reference/models/list) API to
     see all of your available models, or see our
-    [Model overview](https://platform.openai.com/docs/models/overview) for
-    descriptions of them.
+    [Model overview](https://platform.openai.com/docs/models) for descriptions of
+    them.
     """
 
     name: str | None = None
@@ -155,8 +160,8 @@ class AssistantUpdateParams(BaseModel):
     response_format: AssistantResponseFormatOptionParam | None = None
     """Specifies the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -273,7 +278,7 @@ class RunCreateParams(BaseModel):
     search result content.
 
     See the
-    [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+    [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
     for more information.
     """
 
@@ -331,15 +336,15 @@ class RunCreateParams(BaseModel):
     parallel_tool_calls: bool = True
     """
     Whether to enable
-    [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+    [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
     during tool use.
     """
 
     response_format: AssistantResponseFormatOptionParam | None = None
     """Specifies the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
     and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -416,8 +421,15 @@ class CompletionCreateParams(BaseModel):
     """ID of the model to use.
 
     See the
-    [model endpoint compatibility](https://platform.openai.com/docs/models/model-endpoint-compatibility)
+    [model endpoint compatibility](https://platform.openai.com/docs/models#model-endpoint-compatibility)
     table for details on which models work with the Chat API.
+    """
+
+    audio: ChatCompletionAudioParam | None = None
+    """Parameters for audio output.
+
+    Required when audio output is requested with `modalities: ["audio"]`.
+    [Learn more](https://platform.openai.com/docs/guides/audio).
     """
 
     frequency_penalty: float | None = None
@@ -426,7 +438,7 @@ class CompletionCreateParams(BaseModel):
     Positive values penalize new tokens based on their existing frequency in the
     text so far, decreasing the model's likelihood to repeat the same line verbatim.
 
-    [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation/parameter-details)
+    [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
     """
 
     function_call: FunctionCall | None = None
@@ -487,7 +499,21 @@ class CompletionCreateParams(BaseModel):
     metadata: dict[str, str] | None = None
     """
     Developer-defined tags and values used for filtering completions in the
-    [dashboard](https://platform.openai.com/completions).
+    [dashboard](https://platform.openai.com/chat-completions).
+    """
+
+    modalities: list[ChatCompletionModality] | None = None
+    """
+    Output types that you would like the model to generate for this request. Most
+    models are capable of generating text, which is the default:
+
+    `["text"]`
+
+    The `gpt-4o-audio-preview` model can also be used to
+    [generate audio](https://platform.openai.com/docs/guides/audio). To request that
+    this model generate both text and audio responses, you can use:
+
+    `["text", "audio"]`
     """
 
     n: int | None = None
@@ -500,8 +526,14 @@ class CompletionCreateParams(BaseModel):
     parallel_tool_calls: bool = True
     """
     Whether to enable
-    [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+    [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
     during tool use.
+    """
+
+    prediction: ChatCompletionPredictionContentParam | None = None
+    """
+    Static predicted output content, such as the content of a text file that is
+    being regenerated.
     """
 
     presence_penalty: float | None = None
@@ -510,15 +542,15 @@ class CompletionCreateParams(BaseModel):
     Positive values penalize new tokens based on whether they appear in the text so
     far, increasing the model's likelihood to talk about new topics.
 
-    [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation/parameter-details)
+    [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
     """
 
     response_format: ResponseFormat = ResponseFormatText()
     """An object specifying the format that the model must output.
 
-    Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-    [GPT-4o mini](https://platform.openai.com/docs/models/gpt-4o-mini),
-    [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and
+    Compatible with [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+    [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
+    [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
     all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
 
     Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -570,8 +602,9 @@ class CompletionCreateParams(BaseModel):
 
     store: bool | None = None
     """
-    Whether or not to store the output of this completion request for traffic
-    logging in the [dashboard](https://platform.openai.com/completions).
+    Whether or not to store the output of this chat completion request for use in
+    our [model distillation](https://platform.openai.com/docs/guides/distillation)
+    or [evals](https://platform.openai.com/docs/guides/evals) products.
     """
 
     stream_options: ChatCompletionStreamOptionsParam | None = None
@@ -627,7 +660,7 @@ class CompletionCreateParams(BaseModel):
     """
     A unique identifier representing your end-user, which can help OpenAI to monitor
     and detect abuse.
-    [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
+    [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
     """
 
     stream: bool = False
