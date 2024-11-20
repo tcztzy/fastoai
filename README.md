@@ -9,7 +9,7 @@ and [openai-python](https://github.com/openai/openai-python).
 
 ## Quick Start
 
-The following [example](./examples/ollama.py) shows a case to overriding the
+The following [example](./examples/main.py) shows a case to overriding the
 original streaming response, we append `[ollama]` to every chunk content.
 
 
@@ -17,7 +17,7 @@ original streaming response, we append `[ollama]` to every chunk content.
 from fastapi.responses import StreamingResponse
 from fastoai import FastOAI
 from fastoai.requests import CompletionCreateParams
-from fastoai.routers.ollama import router
+from fastoai.routers import router
 from openai import AsyncOpenAI
 
 app = FastOAI()
@@ -49,7 +49,7 @@ app.include_router(router)
 And that's it! You can now run the server using `uvicorn`:
 
 ```bash
-uvicorn examples.ollama:app --reload
+uvicorn examples.main:app --reload
 ```
 
 ## Architecture
@@ -57,7 +57,7 @@ uvicorn examples.ollama:app --reload
 ```mermaid
 graph TD
     client["`*openai client* (Python/Node.js/RESTful)`"]-->fastoai[FastOAI server]
-    fastoai-->ollama[Ollama API]
+    fastoai-->ChatCompletion[OpenAI Chat Completion API]
     fastoai-->openai[OpenAI API]
     fastoai-->others[Any other API]
 ```

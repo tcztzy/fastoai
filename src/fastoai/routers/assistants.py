@@ -5,11 +5,11 @@ from openai.types.beta.assistant_deleted import AssistantDeleted
 from pydantic import Field
 from sqlmodel import col, select
 
-from ...models import Assistant, User, get_current_active_user
-from ...requests import AssistantCreateParams, AssistantUpdateParams
-from ...routing import OAIRouter
-from ...schema import ListObject
-from ...settings import Settings, get_settings
+from ..models import Assistant, User, get_current_active_user
+from ..requests import AssistantCreateParams, AssistantUpdateParams
+from ..routing import OAIRouter
+from ..schema import ListObject
+from ..settings import Settings, get_settings
 from ._fix import MetadataRenameRoute
 
 router = OAIRouter(tags=["Assistants"], route_class=MetadataRenameRoute)

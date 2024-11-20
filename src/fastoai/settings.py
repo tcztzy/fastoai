@@ -6,8 +6,6 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from sqlmodel import Session, SQLModel, create_engine
 
-from .serde import json_deserializer, json_serializer
-
 
 class AnthropicSettings(BaseSettings, env_prefix="anthropic_"):
     """Anthropic settings."""
@@ -56,11 +54,7 @@ class Settings(BaseSettings):
     @cached_property
     def engine(self):
         """Get engine."""
-        e = create_engine(
-            self.database_url,
-            json_serializer=json_serializer,
-            json_deserializer=json_deserializer,
-        )
+        e = create_engine(self.database_url)
         SQLModel.metadata.create_all(e)
         return e
 

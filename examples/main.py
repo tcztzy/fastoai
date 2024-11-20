@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastoai import FastOAI
-from fastoai.routers.ollama import router
+from fastoai.routers import router
 from fastoai.settings import get_settings
 
 settings = get_settings()

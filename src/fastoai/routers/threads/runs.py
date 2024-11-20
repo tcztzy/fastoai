@@ -18,19 +18,18 @@ from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.beta.threads.text_content_block import TextContentBlock
 from pydantic import BaseModel
 
-from ....models import (
+from ...models import (
     Assistant,
     Message,
     Run,
-    RunStatus,
     RunStep,
     Thread,
     User,
     get_current_active_user,
 )
-from ....requests import RunCreateParams
-from ....routing import OAIRouter
-from ....settings import Settings, get_settings, settings
+from ...requests import RunCreateParams
+from ...routing import OAIRouter
+from ...settings import Settings, get_settings, settings
 from .._backend import get_ollama
 from .._fix import MetadataRenameRoute
 
@@ -75,7 +74,6 @@ def run_decorator(run_model: Run):
                     EventData(event=f"{run_model.object}.expired", data=run_model)
                 )
             except Exception as e:
-                print(e)
                 run_model.status = "failed"
                 run_model.last_error = LastError(code="server_error", message=str(e))
                 settings.session.add(run_model)
@@ -144,7 +142,7 @@ async def create_run(
     run = Run(
         assistant=assistant,
         thread=thread,
-        status=RunStatus.queued,
+        status="queued",
         model=assistant.model,
         **openai_run_args,
     )

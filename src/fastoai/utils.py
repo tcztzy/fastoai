@@ -1,8 +1,8 @@
+import json
 import secrets
 from datetime import UTC, datetime
 from functools import partial
 
-import orjson
 from pydantic import BaseModel
 
 RANDOM_STRING_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -40,5 +40,4 @@ def json_serializer(model: BaseModel):
 
 
 def json_deserializer(data: str):
-    json = orjson.loads(data)
-    assert isinstance(json, dict) and "object" in json, "Invalid JSON data"
+    assert isinstance(json.loads(data), dict) and "object" in json, "Invalid JSON data"

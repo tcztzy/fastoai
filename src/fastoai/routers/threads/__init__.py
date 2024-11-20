@@ -1,11 +1,11 @@
 from fastapi import Depends
 from sqlmodel import select
 
-from ....models import Thread, User, get_current_active_user
-from ....requests import MessageCreateParams, ThreadCreateParams
-from ....routing import OAIRouter
-from ....schema import ListObject
-from ....settings import Settings, get_settings
+from ...models import Thread, User, get_current_active_user
+from ...requests import MessageCreateParams, ThreadCreateParams
+from ...routing import OAIRouter
+from ...schema import ListObject
+from ...settings import Settings, get_settings
 from .._fix import MetadataRenameRoute
 from .messages import create_message
 

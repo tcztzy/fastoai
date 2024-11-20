@@ -1,13 +1,14 @@
 from shutil import copyfileobj
+from typing import Literal
 
 from fastapi import Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import select
 
-from ...models import FileObject, FilePurpose, FileStatus, User, get_current_active_user
-from ...routing import OAIRouter
-from ...schema import ListObject
-from ...settings import Settings, get_settings
+from ..models import FileObject, User, get_current_active_user
+from ..routing import OAIRouter
+from ..schema import ListObject
+from ..settings import Settings, get_settings
 
 router = OAIRouter(tags=["Files"])
 
@@ -15,7 +16,7 @@ router = OAIRouter(tags=["Files"])
 @router.post("/files")
 async def upload_file(
     upload_file: UploadFile,
-    purpose: FilePurpose,
+    purpose: Literal["avatar", "attachment"],
     settings: Settings = Depends(get_settings),
     user: User = Depends(get_current_active_user),
 ) -> FileObject:
@@ -24,7 +25,7 @@ async def upload_file(
             "bytes": upload_file.size,
             "filename": upload_file.filename,
             "purpose": purpose,
-            "status": FileStatus.uploaded,
+            "status": "uploaded",
         }
     )
     with (settings.upload_dir / file_object.id).open("wb") as file:

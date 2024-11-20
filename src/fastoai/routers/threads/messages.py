@@ -2,11 +2,11 @@ from fastapi import Depends, HTTPException
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from sqlmodel import select
 
-from ....models import Message, Thread, User, get_current_active_user
-from ....requests import MessageCreateParams
-from ....routing import OAIRouter
-from ....schema import ListObject
-from ....settings import Settings, get_settings
+from ...models import Message, Thread, User, get_current_active_user
+from ...requests import MessageCreateParams
+from ...routing import OAIRouter
+from ...schema import ListObject
+from ...settings import Settings, get_settings
 from .._fix import MetadataRenameRoute
 
 router = OAIRouter(tags=["Messages"], route_class=MetadataRenameRoute)

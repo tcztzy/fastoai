@@ -4,8 +4,8 @@ from openai import AsyncOpenAI
 from openai.types import Model
 from openai.types.model_deleted import ModelDeleted
 
-from ...models import User, get_current_active_user
-from ...routing import OAIRouter
+from ..models import User, get_current_active_user
+from ..routing import OAIRouter
 from ._backend import get_ollama, get_openai
 
 router = OAIRouter(tags=["Models"])
