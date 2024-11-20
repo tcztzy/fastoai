@@ -1,9 +1,6 @@
-import json
 import secrets
 from datetime import UTC, datetime
 from functools import partial
-
-from pydantic import BaseModel
 
 RANDOM_STRING_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -33,11 +30,3 @@ def random_id_with_prefix(prefix: str):
 
 def now():
     return datetime.now(UTC)
-
-
-def json_serializer(model: BaseModel):
-    return model.model_dump_json()
-
-
-def json_deserializer(data: str):
-    assert isinstance(json.loads(data), dict) and "object" in json, "Invalid JSON data"

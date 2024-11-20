@@ -1,4 +1,4 @@
-from fastoai._models import WithMetadata
+from fastoai.models.user import WithMetadata
 
 
 def test_metadata_mixin():

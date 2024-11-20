@@ -6,8 +6,7 @@ from functools import wraps
 
 from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from ollama import AsyncClient
-from ollama._types import Message as OllamaMessage
+from openai import AsyncOpenAI
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
 from openai.types.beta.threads.runs.message_creation_step_details import (
@@ -15,7 +14,7 @@ from openai.types.beta.threads.runs.message_creation_step_details import (
     MessageCreationStepDetails,
 )
 from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
-from openai.types.beta.threads.text_content_block import TextContentBlock
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from ...models import (
@@ -30,7 +29,7 @@ from ...models import (
 from ...requests import RunCreateParams
 from ...routing import OAIRouter
 from ...settings import Settings, get_settings, settings
-from .._backend import get_ollama
+from .._backend import get_openai
 from .._fix import MetadataRenameRoute
 
 
@@ -89,22 +88,6 @@ def run_decorator(run_model: Run):
 router = OAIRouter(tags=["Runs"], route_class=MetadataRenameRoute)
 
 
-def from_openai_message_to_ollama_message(message: OpenAIMessage) -> OllamaMessage:
-    if any(not isinstance(block, TextContentBlock) for block in message.content):
-        raise NotImplementedError("Only text content is supported")
-    result: OllamaMessage = {
-        "role": message.role,
-        "content": "".join(
-            [
-                block.text.value
-                for block in message.content
-                if isinstance(block, TextContentBlock)
-            ]
-        ),
-    }
-    return result
-
-
 class OllamaMessageDelta(BaseModel):
     class Message(BaseModel):
         role: str
@@ -122,7 +105,7 @@ async def create_run(
     params: RunCreateParams,
     settings: Settings = Depends(get_settings),
     user: User = Depends(get_current_active_user),
-    ollama: AsyncClient = Depends(get_ollama),
+    client: AsyncOpenAI = Depends(get_openai),
 ):
     if not params.stream:
         raise NotImplementedError("Non-streaming is not yet supported")
@@ -146,13 +129,11 @@ async def create_run(
         model=assistant.model,
         **openai_run_args,
     )
-    messages: list[OllamaMessage] = []
+    messages: list[ChatCompletionMessageParam] = []
     instructions = run.instructions or assistant.instructions
     if instructions:
         messages.append({"role": "system", "content": instructions})
-    messages.extend(
-        [from_openai_message_to_ollama_message(message) for message in thread.messages]
-    )
+    messages.extend(thread.messages)
 
     async def message_creation_step():
         message = Message(
@@ -199,7 +180,7 @@ async def create_run(
         settings.session.refresh(message)
         yield "event: thread.message.in_progress\n"
         yield f"data: {message.model_dump_json()}\n\n"
-        async for part in await ollama.chat(
+        async for part in await client.chat.completions.create(
             model=assistant.model,
             messages=messages,
             stream=True,
@@ -216,7 +197,7 @@ async def create_run(
                                     "index": 0,
                                     "type": "text",
                                     "text": {
-                                        "value": part["message"]["content"],
+                                        "value": part.choices[0].delta.content,
                                         "annotations": [],
                                     },
                                 }

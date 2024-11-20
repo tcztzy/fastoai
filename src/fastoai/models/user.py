@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 from sqlmodel import JSON, Field, Relationship, SQLModel
 
 from ..settings import settings
-from ..utils import now, random_id_with_prefix
+from ._utils import now, random_id_with_prefix
 
 security = HTTPBearer()
 
