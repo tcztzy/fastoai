@@ -23,7 +23,7 @@ from openai import AsyncOpenAI
 app = FastOAI()
 
 
-@app.post_chat_completions
+@app.post("/chat/completions")
 async def create_chat_completions(params: CompletionCreateParams):
     client = AsyncOpenAI(api_key="ollama", base_url="http://localhost:11434/v1")
     response = await client.chat.completions.create(**params.model_dump())

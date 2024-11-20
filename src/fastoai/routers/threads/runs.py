@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
 from openai.types.beta.threads.message import Message as OpenAIMessage
@@ -27,10 +27,8 @@ from ...models import (
     get_current_active_user,
 )
 from ...requests import RunCreateParams
-from ...routing import OAIRouter
 from ...settings import Settings, get_settings, settings
 from .._backend import get_openai
-from .._fix import MetadataRenameRoute
 
 
 @dataclass
@@ -85,18 +83,7 @@ def run_decorator(run_model: Run):
     return event_decorator
 
 
-router = OAIRouter(tags=["Runs"], route_class=MetadataRenameRoute)
-
-
-class OllamaMessageDelta(BaseModel):
-    class Message(BaseModel):
-        role: str
-        content: str
-
-    model: str
-    created_at: datetime
-    message: Message
-    done: bool
+router = APIRouter(tags=["Runs"])
 
 
 @router.post("/threads/{thread_id}/runs")

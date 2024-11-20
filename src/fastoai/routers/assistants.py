@@ -1,25 +1,24 @@
 from typing import Annotated, Literal
 
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from openai.types.beta.assistant_deleted import AssistantDeleted
 from pydantic import Field
 from sqlmodel import col, select
 
 from ..models import Assistant, User, get_current_active_user
 from ..requests import AssistantCreateParams, AssistantUpdateParams
-from ..routing import OAIRouter
 from ..schema import ListObject
 from ..settings import Settings, get_settings
-from ._fix import MetadataRenameRoute
 
-router = OAIRouter(tags=["Assistants"], route_class=MetadataRenameRoute)
+router = APIRouter(tags=["Assistants"], dependencies=[Depends(get_current_active_user)])
 
 
-@router.post_assistants(response_model_exclude_unset=True, response_model_by_alias=True)
+@router.post(
+    "/assistants", response_model_exclude_unset=True, response_model_by_alias=True
+)
 async def create_assistant(
     params: AssistantCreateParams,
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> Assistant:
     obj = params.model_dump(exclude_unset=True)
     obj["tools"] = list(obj["tools"])
@@ -31,14 +30,13 @@ async def create_assistant(
     return assistant
 
 
-@router.get_assistants
+@router.get("/assistants")
 async def list_assistants(
     limit: Annotated[int, Field(ge=1, le=100)] = 20,
     order: Literal["asc", "desc"] = "desc",
     after: str | None = None,
     before: str | None = None,
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> ListObject[Assistant]:
     statement = select(Assistant).order_by(getattr(col(Assistant.created_at), order)())
     if after is not None:

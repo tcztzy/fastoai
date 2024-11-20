@@ -1,15 +1,13 @@
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from sqlmodel import select
 
 from ...models import Message, Thread, User, get_current_active_user
 from ...requests import MessageCreateParams
-from ...routing import OAIRouter
 from ...schema import ListObject
 from ...settings import Settings, get_settings
-from .._fix import MetadataRenameRoute
 
-router = OAIRouter(tags=["Messages"], route_class=MetadataRenameRoute)
+router = APIRouter(tags=["Messages"])
 
 
 def get_thread(thread_id: str, settings: Settings = Depends(get_settings)) -> Thread:

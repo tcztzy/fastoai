@@ -1,24 +1,8 @@
 from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import Literal
 
-from pydantic import Field
 from pydantic_settings import BaseSettings
 from sqlmodel import Session, SQLModel, create_engine
-
-
-class AnthropicSettings(BaseSettings, env_prefix="anthropic_"):
-    """Anthropic settings."""
-
-    api_key: str
-    base_url: str = "https://api.anthropic.com"
-
-
-class GoogleSetting(BaseSettings, env_prefix="google_"):
-    """Google Gemini settings."""
-
-    api_key: str
-    base_url: str = "https://generativelanguage.googleapis.com"
 
 
 class OpenAISettings(BaseSettings, env_prefix="openai_"):
@@ -28,20 +12,10 @@ class OpenAISettings(BaseSettings, env_prefix="openai_"):
     base_url: str = "https://api.openai.com/v1"
 
 
-class OllamaSettings(BaseSettings, env_prefix="ollama_"):
-    """Ollama settings."""
-
-    api_key: Literal["ollama"] = "ollama"
-    base_url: str = Field(default="https://api.ollama.com", alias="ollama_host")
-
-
 class Settings(BaseSettings):
     """Settings."""
 
     openai: list[OpenAISettings] = []
-    anthropic: list[AnthropicSettings] = []
-    google: list[GoogleSetting] = []
-    ollama: list[OllamaSettings] = []
     database_url: str = "sqlite:///"
     upload_dir: Path = Path.home() / ".fastoai" / "uploads"
     auth_enabled: bool = False

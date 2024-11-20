@@ -1,16 +1,15 @@
 from shutil import copyfileobj
 from typing import Literal
 
-from fastapi import Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import select
 
 from ..models import FileObject, User, get_current_active_user
-from ..routing import OAIRouter
 from ..schema import ListObject
 from ..settings import Settings, get_settings
 
-router = OAIRouter(tags=["Files"])
+router = APIRouter(tags=["Files"])
 
 
 @router.post("/files")

@@ -8,7 +8,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastOAI):
     yield
     settings.session.close()
 

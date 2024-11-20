@@ -1,15 +1,14 @@
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from openai import AsyncOpenAI
 from openai.types import Model
 
 from ..models import get_current_active_user
-from ..routing import OAIRouter
 from ._backend import get_openai
 
-router = OAIRouter(tags=["Models"], dependencies=[Depends(get_current_active_user)])
+router = APIRouter(tags=["Models"], dependencies=[Depends(get_current_active_user)])
 
 
-@router.get_models
+@router.get("/models")
 async def get_models(
     openai: AsyncOpenAI = Depends(get_openai),
 ):

@@ -14,13 +14,13 @@ from typing import (
 import sqlalchemy as sa
 from pydantic import BaseModel, RootModel
 from sqlalchemy.ext.mutable import Mutable
-from sqlmodel import JSON, String
+from sqlmodel import String
 
 
 class BaseModelType(sa.types.TypeDecorator[BaseModel]):
     """This is a custom SQLAlchemy field that allows easy serialization between database JSONB types and Pydantic models"""
 
-    impl = JSON
+    impl = sa.JSON
 
     def __init__(
         self,
@@ -30,9 +30,6 @@ class BaseModelType(sa.types.TypeDecorator[BaseModel]):
     ):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
-
-    def load_dialect_impl(self, dialect):
-        return dialect.type_descriptor(self.impl())
 
     def process_bind_param(self, value: Optional[BaseModel], _):
         """Convert python native type to JSON string before storing in the database"""
@@ -58,9 +55,6 @@ class UnionModelType(sa.types.TypeDecorator[RootModel]):
     ):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
-
-    def load_dialect_impl(self, dialect):
-        return dialect.type_descriptor(self.impl())
 
     def process_bind_param(self, value: Optional[RootModel], _):
         """Convert python native type to JSON string before storing in the database"""
