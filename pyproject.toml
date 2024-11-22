@@ -6,15 +6,17 @@ authors = [
     { name = "Tang Ziya", email = "tcztzy@gmail.Com" }
 ]
 dependencies = [
-    "openai>=1.54.5",
+    "openai>=1.55.0",
     "fastapi[standard]>=0.115.5",
-    "pydantic[email]>=2.9.2",
+    "pydantic[email]>=2.10.1",
     "pydantic-settings>=2.6.1",
     "ruff>=0.7.4",
     "sqlmodel>=0.0.22",
     "aiosqlite>=0.20.0",
     "asyncpg>=0.30.0",
     "sqlalchemy[asyncio]>=2.0.36",
+    "pyyaml>=6.0.2",
+    "fsspec[github]>=2024.10.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"
@@ -35,6 +37,10 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/fastoai"]
+artifacts = [
+    "*.yaml",
+    "*.json",
+]
 
 [tool.ruff]
 extend-exclude = ["generated"]

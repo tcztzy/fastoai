@@ -2,7 +2,6 @@ from typing import (
     Annotated,
     Any,
     Literal,
-    Optional,
     Self,
     SupportsIndex,
     TypeVar,
@@ -13,14 +12,14 @@ from typing import (
 
 import sqlalchemy as sa
 from pydantic import BaseModel, RootModel
-from sqlalchemy.ext.mutable import Mutable
-from sqlmodel import String
+from sqlalchemy.ext.mutable import Mutable, MutableList
+from sqlmodel import JSON, Enum, String
 
 
 class BaseModelType(sa.types.TypeDecorator[BaseModel]):
     """This is a custom SQLAlchemy field that allows easy serialization between database JSONB types and Pydantic models"""
 
-    impl = sa.JSON
+    impl = JSON
 
     def __init__(
         self,
@@ -31,15 +30,14 @@ class BaseModelType(sa.types.TypeDecorator[BaseModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: Optional[BaseModel], _):
+    def process_bind_param(self, value: BaseModel | None, _):
         """Convert python native type to JSON string before storing in the database"""
         return None if value is None else value.model_dump(mode="json")
 
     def process_result_value(self, value: Any, _):
         """Convert JSON string back to Python object after retrieving from the database"""
-        return (
-            None if value is None else self.pydantic_model_class.model_validate(value)
-        )
+        v = None if value is None else self.pydantic_model_class.model_validate(value)
+        return v.root if isinstance(v, RootModel) else v
 
 
 class UnionModelType(sa.types.TypeDecorator[RootModel]):
@@ -56,14 +54,16 @@ class UnionModelType(sa.types.TypeDecorator[RootModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: Optional[RootModel], _):
+    def process_bind_param(self, value: RootModel | None, _):
         """Convert python native type to JSON string before storing in the database"""
         return None if value is None else value.model_dump(mode="json")
 
     def process_result_value(self, value: Any, _):
         """Convert JSON string back to Python object after retrieving from the database"""
         return (
-            None if value is None else self.pydantic_model_class.model_validate(value)
+            None
+            if value is None
+            else self.pydantic_model_class.model_validate(value).root
         )
 
 
@@ -160,10 +160,7 @@ def as_sa_type(type_: type):
         return as_sa_type(t)
 
     if origin is list and _is_base_model(t):
-        types = RootModel[type_]
-        return type(t.__name__ + "s", (types, MutableListModel[t]), {}).as_mutable(
-            BaseModelType(types)
-        )
+        return MutableList.as_mutable(BaseModelType(RootModel[type_]))
 
     if origin is Union:
         new_type = RootModel[type_]
@@ -172,6 +169,6 @@ def as_sa_type(type_: type):
         )
 
     if origin is Literal:
-        return sa.Enum(*args)
+        return Enum(*args)
 
     raise ValueError(f"Unsupported type {type_}")
