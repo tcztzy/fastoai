@@ -40,6 +40,8 @@ packages = ["src/fastoai"]
 artifacts = [
     "*.yaml",
     "*.json",
+    "cache",
+    "d910ba2ef878f7db0223a966b81c8b3f3b65027bb39e4431bb05140171eece39",
 ]
 
 [tool.ruff]
