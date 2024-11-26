@@ -5,32 +5,27 @@ from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
+from openai.types.chat.completion_create_params import CompletionCreateParams
+from pydantic import RootModel
 
-from ..models import User, get_current_active_user
-from ..requests import (
-    CompletionCreateParams,
-)
+from ..models import get_current_active_user
 from ._backend import get_openai
-from .assistants import router as assistants_router
+from .beta.assistants import router as beta_router
 from .files import router as files_router
 from .models import router as models_router
-from .threads import router as threads_router
-from .threads.messages import router as messages_router
-from .threads.runs import router as runs_router
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 chat_router = APIRouter(tags=["Chat"])
 
 
 @chat_router.post("/chat/completions")
 async def create_chat_completions(
-    params: CompletionCreateParams,
-    user: User = Depends(get_current_active_user),
+    params: RootModel[CompletionCreateParams],
     openai: AsyncOpenAI = Depends(get_openai),
 ):
     response = await openai.chat.completions.create(**params.model_dump())
-    if params.stream:
+    if params.root["stream"]:
         response = cast(AsyncIterable[ChatCompletionChunk], response)
 
         async def _stream(chunks: AsyncIterable[ChatCompletionChunk]):
@@ -47,9 +42,6 @@ for subrouter in [
     chat_router,
     models_router,
     files_router,
-    assistants_router,
-    threads_router,
-    messages_router,
-    runs_router,
+    beta_router,
 ]:
     router.include_router(subrouter)

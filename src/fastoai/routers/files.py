@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import select
 
-from ..models import FileObject, User, get_current_active_user
+from ..models import FileObject
 from ..schema import ListObject
 from ..settings import Settings, get_settings
 
@@ -17,7 +17,6 @@ async def upload_file(
     upload_file: UploadFile,
     purpose: Literal["avatar", "attachment"],
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> FileObject:
     file_object = FileObject.model_validate(
         {
@@ -37,7 +36,6 @@ async def upload_file(
 
 @router.get("/files")
 async def list_files(
-    user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
 ) -> ListObject[FileObject]:
     files = settings.session.exec(select(FileObject)).all()
@@ -49,7 +47,6 @@ async def list_files(
 @router.get("/files/{file_id}")
 async def retrieve_file(
     file_id: str,
-    user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
 ) -> FileObject:
     file = settings.session.get(FileObject, file_id)
@@ -61,7 +58,6 @@ async def retrieve_file(
 @router.get("/files/{file_id}/content")
 async def retrieve_file_content(
     file_id: str,
-    user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
 ):
     file = settings.session.get(FileObject, file_id)
@@ -73,7 +69,6 @@ async def retrieve_file_content(
 @router.delete("/files/{file_id}")
 async def delete_file(
     file_id: str,
-    user: User = Depends(get_current_active_user),
     settings: Settings = Depends(get_settings),
 ):
     file = settings.session.get(FileObject, file_id)

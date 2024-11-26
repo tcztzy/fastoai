@@ -23,7 +23,6 @@ class Settings(BaseSettings, env_prefix="fastoai_"):
     upload_dir: Path = Path.home() / ".fastoai" / "uploads"
     auth_enabled: bool = False
     generate_models: bool = False
-    generate_requests: bool = False
 
     def model_post_init(self, __context):
         self.upload_dir.mkdir(parents=True, exist_ok=True)

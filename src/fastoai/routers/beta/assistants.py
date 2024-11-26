@@ -1,32 +1,32 @@
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
+from openai.types.beta.assistant_create_params import AssistantCreateParams
 from openai.types.beta.assistant_deleted import AssistantDeleted
-from pydantic import Field
+from openai.types.beta.assistant_update_params import AssistantUpdateParams
+from pydantic import Field, RootModel
 from sqlmodel import col, select
 
-from ..models import Assistant, User, get_current_active_user
-from ..requests import AssistantCreateParams, AssistantUpdateParams
-from ..schema import ListObject
-from ..settings import Settings, get_settings
+from ...models import Assistant
+from ...schema import ListObject
+from ...settings import Settings, get_settings
 
-router = APIRouter(tags=["Assistants"], dependencies=[Depends(get_current_active_user)])
+router = APIRouter()
 
 
 @router.post(
     "/assistants", response_model_exclude_unset=True, response_model_by_alias=True
 )
 async def create_assistant(
-    params: AssistantCreateParams,
+    params: RootModel[AssistantCreateParams],
     settings: Settings = Depends(get_settings),
 ) -> Assistant:
-    obj = params.model_dump(exclude_unset=True)
-    obj["tools"] = list(obj["tools"])
-    assistant = Assistant.model_validate(obj)
-    assistant.tools = list(assistant.tools)
+    assistant = Assistant.model_validate(
+        params.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
+    )
     settings.session.add(assistant)
-    settings.session.commit()
-    settings.session.refresh(assistant)
+    await settings.session.commit()
+    await settings.session.refresh(assistant)
     return assistant
 
 
@@ -79,7 +79,6 @@ async def list_assistants(
 async def retrieve_assistant(
     assistant_id: str,
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> Assistant:
     assistant = settings.session.get(Assistant, assistant_id)
     if assistant is None:
@@ -90,23 +89,22 @@ async def retrieve_assistant(
 @router.post("/assistants/{assistant_id}")
 async def update_assistant(
     assistant_id: str,
-    params: AssistantUpdateParams,
+    params: RootModel[AssistantUpdateParams],
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> Assistant:
-    assistant = settings.session.get(Assistant, assistant_id)
-    assistant.data = assistant.data.model_validate(
-        assistant.data.model_dump().update(params.model_dump())
-    )
-    settings.session.commit()
-    return assistant.data
+    assistant = await settings.session.get(Assistant, assistant_id)
+    if assistant is None:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    obj = cast(AssistantUpdateParams, params.model_dump(exclude_unset=True))
+    assistant = Assistant.model_validate(assistant.model_dump() | obj)
+    await settings.session.commit()
+    return assistant
 
 
 @router.delete("/assistants/{assistant_id}")
 async def delete_assistant(
     assistant_id: str,
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> AssistantDeleted:
     assistant = settings.session.get(Assistant, assistant_id)
     if assistant is None:

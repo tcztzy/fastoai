@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends
 from openai import AsyncOpenAI
 from openai.types import Model
 
-from ..models import get_current_active_user
 from ._backend import get_openai
 
-router = APIRouter(tags=["Models"], dependencies=[Depends(get_current_active_user)])
+router = APIRouter(tags=["Models"])
 
 
 @router.get("/models")

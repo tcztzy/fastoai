@@ -1,29 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from openai.types.beta.threads.message import Message as OpenAIMessage
+from openai.types.beta.threads.message_create_params import MessageCreateParams
+from pydantic import RootModel
 from sqlmodel import select
 
-from ...models import Message, Thread, User, get_current_active_user
-from ...requests import MessageCreateParams
+from ...models import Message
 from ...schema import ListObject
 from ...settings import Settings, get_settings
 
-router = APIRouter(tags=["Messages"])
-
-
-def get_thread(thread_id: str, settings: Settings = Depends(get_settings)) -> Thread:
-    thread = settings.session.get(Thread, thread_id)
-    if thread is None:
-        raise HTTPException(status_code=404, detail="Thread not found")
-    return thread
+router = APIRouter()
 
 
 @router.post("/threads/{thread_id}/messages")
 async def create_message(
     thread_id: str,
-    params: MessageCreateParams,
-    user: User = Depends(get_current_active_user),
+    params: RootModel[MessageCreateParams],
     settings: Settings = Depends(get_settings),
 ):
+    params = params.root
     if isinstance(params.content, str):
         params.content = [
             {"type": "text", "text": {"value": params.content, "annotations": []}}
@@ -51,7 +45,6 @@ async def create_message(
 async def list_messages(
     thread_id: str,
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
 ) -> ListObject[OpenAIMessage]:
     messages = settings.session.exec(
         select(Message).where(Message.thread_id == thread_id)

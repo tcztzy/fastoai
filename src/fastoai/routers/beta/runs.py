@@ -9,13 +9,14 @@ from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
+from openai.types.beta.threads.run_create_params import RunCreateParams
 from openai.types.beta.threads.runs.message_creation_step_details import (
     MessageCreation,
     MessageCreationStepDetails,
 )
 from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from ...models import (
     Assistant,
@@ -23,10 +24,7 @@ from ...models import (
     Run,
     RunStep,
     Thread,
-    User,
-    get_current_active_user,
 )
-from ...requests import RunCreateParams
 from ...settings import Settings, get_settings, settings
 from .._backend import get_openai
 
@@ -83,15 +81,14 @@ def run_decorator(run_model: Run):
     return event_decorator
 
 
-router = APIRouter(tags=["Runs"])
+router = APIRouter()
 
 
 @router.post("/threads/{thread_id}/runs")
 async def create_run(
     thread_id: str,
-    params: RunCreateParams,
+    params: RootModel[RunCreateParams],
     settings: Settings = Depends(get_settings),
-    user: User = Depends(get_current_active_user),
     client: AsyncOpenAI = Depends(get_openai),
 ):
     if not params.stream:
