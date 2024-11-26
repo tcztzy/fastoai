@@ -3,8 +3,6 @@ from typing import (
     Any,
     Literal,
     Self,
-    SupportsIndex,
-    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -30,9 +28,17 @@ class BaseModelType(sa.types.TypeDecorator[BaseModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: BaseModel | None, _):
+    def process_bind_param(self, value: BaseModel | list[BaseModel] | None, _):
         """Convert python native type to JSON string before storing in the database"""
-        return None if value is None else value.model_dump(mode="json")
+        match value:
+            case None:
+                return None
+            case list():
+                return [v.model_dump(mode="json") for v in value]
+            case BaseModel():
+                return value.model_dump(mode="json")
+            case _:
+                return value
 
     def process_result_value(self, value: Any, _):
         """Convert JSON string back to Python object after retrieving from the database"""
@@ -54,9 +60,17 @@ class UnionModelType(sa.types.TypeDecorator[RootModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: RootModel | None, _):
+    def process_bind_param(self, value: RootModel | list[BaseModel] | None, _):
         """Convert python native type to JSON string before storing in the database"""
-        return None if value is None else value.model_dump(mode="json")
+        match value:
+            case None:
+                return None
+            case list():
+                return [v.model_dump(mode="json") for v in value]
+            case BaseModel():
+                return value.model_dump(mode="json")
+            case _:
+                return value
 
     def process_result_value(self, value: Any, _):
         """Convert JSON string back to Python object after retrieving from the database"""
@@ -85,39 +99,6 @@ class MutableBaseModel(Mutable, BaseModel):
             return cls.model_validate_json(value)
 
         if isinstance(value, dict):
-            return cls.model_validate(value)
-
-        return super().coerce(key, value)
-
-
-T = TypeVar("T")
-
-
-class MutableListModel(Mutable, RootModel[list[T]]):
-    def __iter__(self):
-        return iter(self.root)
-
-    def __getitem__(self, key: SupportsIndex | slice) -> T:
-        return self.root[key]
-
-    def __setitem__(self, key: SupportsIndex | slice, value: T | list[T]) -> None:
-        """Allows SQLAlchmey Session to track mutable behavior"""
-        self.root[key] = value
-        self.changed()
-
-    @classmethod
-    def coerce(cls, key: str, value: Any) -> Self | None:
-        """Convert JSON to pydantic model object allowing for mutable behavior"""
-        if value is None:
-            return None
-
-        if isinstance(value, cls):
-            return value
-
-        if isinstance(value, str):
-            return cls.model_validate_json(value)
-
-        if isinstance(value, list):
             return cls.model_validate(value)
 
         return super().coerce(key, value)
@@ -160,7 +141,7 @@ def as_sa_type(type_: type):
         return as_sa_type(t)
 
     if origin is list and _is_base_model(t):
-        return MutableList.as_mutable(BaseModelType(RootModel[type_]))
+        return MutableList[t].as_mutable(BaseModelType(RootModel[type_]))
 
     if origin is Union:
         new_type = RootModel[type_]

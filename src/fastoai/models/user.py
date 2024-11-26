@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -10,61 +10,6 @@ from ..settings import settings
 from ._utils import now, random_id_with_prefix
 
 security = HTTPBearer()
-
-
-class WithMetadata(SQLModel):
-    metadata_: (
-        dict[
-            Annotated[str, Field(max_length=64)],
-            Annotated[str, Field(max_length=512)] | int | float | bool | None,
-        ]
-        | None
-    ) = Field(
-        None, alias="metadata", sa_type=JSON, sa_column_kwargs={"name": "metadata"}
-    )
-    """Set of 16 key-value pairs that can be attached to an object.
-
-    This can be useful for storing additional information about the object in a
-    structured format. Keys can be a maximum of 64 characters long and values can be
-    a maximum of 512 characters long.
-    """
-
-    def __init__(self, **kwargs):
-        if "metadata" in kwargs:
-            kwargs["metadata_"] = kwargs.pop("metadata")
-        return super().__init__(**kwargs)
-
-    @classmethod
-    def model_validate(
-        cls,
-        obj: Any,
-        *,
-        strict: bool | None = None,
-        from_attributes: bool | None = None,
-        context: dict[str, Any] | None = None,
-        update: dict[str, Any] | None = None,
-    ) -> Self:
-        if "metadata" in obj:
-            obj["metadata_"] = obj.pop("metadata")
-        return super().model_validate(
-            obj,
-            strict=strict,
-            from_attributes=from_attributes,
-            context=context,
-            update=update,
-        )
-
-    def model_dump(self, **kwargs):
-        result = super().model_dump(**kwargs)
-        if "metadata_" in result and kwargs.get("by_alias", False):
-            result["metadata"] = result.pop("metadata_")
-        return result
-
-    def model_dump_json(self, **kwargs):
-        result = super().model_dump_json(**kwargs)
-        if "metadata_" in result:
-            result.replace("metadata_", "metadata")
-        return result
 
 
 class UserSettings(BaseModel):
@@ -83,9 +28,7 @@ class User(SQLModel, table=True):
     is_superuser: bool = False
     is_active: bool = True
     created_at: datetime = Field(default_factory=now)
-    updated_at: datetime = Field(
-        default_factory=now, sa_column_kwargs={"onupdate": now}
-    )
+    updated_at: datetime = Field(default_factory=now)
     settings: UserSettings = Field(default_factory=dict, sa_type=JSON)
     api_keys: list["APIKey"] = Relationship(back_populates="user")
 

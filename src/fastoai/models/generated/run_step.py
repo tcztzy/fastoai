@@ -4,14 +4,14 @@ from typing import Annotated, Literal
 
 from openai.types.beta.threads.runs.run_step import LastError, StepDetails, Usage
 from pydantic import field_serializer
-from sqlalchemy.ext.mutable import MutableDict
-from sqlmodel import JSON, Column, Enum, Field, SQLModel
+from sqlmodel import Enum, Field
 
+from .._metadata import WithMetadata
 from .._types import as_sa_type
 from .._utils import now, random_id_with_prefix
 
 
-class RunStep(SQLModel, table=True):
+class RunStep(WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]
     """The identifier of the run step, which can be referenced in API endpoints."""
 
@@ -44,14 +44,6 @@ class RunStep(SQLModel, table=True):
     """The last error associated with this run step.
 
     Will be `null` if there are no errors.
-    """
-
-    metadata_: Annotated[object | None, Field(sa_column=Column("metadata", MutableDict.as_mutable(JSON)))] = None
-    """Set of 16 key-value pairs that can be attached to an object.
-
-    This can be useful for storing additional information about the object in a
-    structured format. Keys can be a maximum of 64 characters long and values can be
-    a maximum of 512 characters long.
     """
 
     run_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]

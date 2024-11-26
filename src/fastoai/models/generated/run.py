@@ -16,14 +16,14 @@ from openai.types.beta.threads.run import (
 )
 from openai.types.beta.threads.run_status import RunStatus
 from pydantic import field_serializer
-from sqlalchemy.ext.mutable import MutableDict
-from sqlmodel import JSON, Column, Field, SQLModel
+from sqlmodel import Field
 
+from .._metadata import WithMetadata
 from .._types import as_sa_type
 from .._utils import now, random_id_with_prefix
 
 
-class Run(SQLModel, table=True):
+class Run(WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("run_"))]
     """The identifier, which can be referenced in API endpoints."""
 
@@ -75,14 +75,6 @@ class Run(SQLModel, table=True):
     """
     The maximum number of prompt tokens specified to have been used over the course
     of the run.
-    """
-
-    metadata_: Annotated[object | None, Field(sa_column=Column("metadata", MutableDict.as_mutable(JSON)))] = None
-    """Set of 16 key-value pairs that can be attached to an object.
-
-    This can be useful for storing additional information about the object in a
-    structured format. Keys can be a maximum of 64 characters long and values can be
-    a maximum of 512 characters long.
     """
 
     model: str

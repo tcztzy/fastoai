@@ -5,14 +5,14 @@ from typing import Annotated, Literal
 from openai.types.beta.threads.message import Attachment, IncompleteDetails
 from openai.types.beta.threads.message_content import MessageContent
 from pydantic import field_serializer
-from sqlalchemy.ext.mutable import MutableDict
-from sqlmodel import JSON, Column, Enum, Field, SQLModel
+from sqlmodel import Enum, Field
 
+from .._metadata import WithMetadata
 from .._types import as_sa_type
 from .._utils import now, random_id_with_prefix
 
 
-class Message(SQLModel, table=True):
+class Message(WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("msg_"))]
     """The identifier, which can be referenced in API endpoints."""
 
@@ -40,14 +40,6 @@ class Message(SQLModel, table=True):
 
     incomplete_details: Annotated[IncompleteDetails | None, Field(sa_type=as_sa_type(IncompleteDetails), nullable=True)] = None
     """On an incomplete message, details about why the message is incomplete."""
-
-    metadata_: Annotated[object | None, Field(sa_column=Column("metadata", MutableDict.as_mutable(JSON)))] = None
-    """Set of 16 key-value pairs that can be attached to an object.
-
-    This can be useful for storing additional information about the object in a
-    structured format. Keys can be a maximum of 64 characters long and values can be
-    a maximum of 512 characters long.
-    """
 
     role: Annotated[Literal["user", "assistant"], Field(sa_type=Enum("user", "assistant"))]
     """The entity that produced the message. One of `user` or `assistant`."""

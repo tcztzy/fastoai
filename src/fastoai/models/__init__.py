@@ -7,6 +7,7 @@ from openai._models import BaseModel
 from pydantic.alias_generators import to_snake
 
 from ..settings import settings
+from ._metadata import WithMetadata as WithMetadata
 from .user import User, get_current_active_user
 
 Imports = list[tuple[str, tuple[str, ...]]]
@@ -76,6 +77,7 @@ def generate_module(cls: type[BaseModel]):
             ("sqlmodel", ("JSON", "Column", "Enum", "Field", "SQLModel")),
             (".._types", ("as_sa_type",)),
             (".._utils", ("now", "random_id_with_prefix")),
+            (".._metadata", ("WithMetadata",)),
         ]
         + ([(cls.__module__, exports)] if len(exports) else [])
     )
@@ -106,11 +108,15 @@ def generate_module(cls: type[BaseModel]):
         base,
     )
     metadata_pattern = re.compile(r"metadata: (.+) = None(\s*\"\"\"[\s\S]*?\"\"\"\s*)")
-    if (mo := metadata_pattern.search(base)) is not None:
+    if metadata_pattern.search(base) is not None:
         base = re.sub(
             metadata_pattern,
-            rf'metadata_: Annotated[{mo.group(1)}, Field(sa_column=Column("metadata", '
-            "MutableDict.as_mutable(JSON)))] = None\\2",
+            "",
+            base,
+        )
+        base = re.sub(
+            "class (.+?)\\(SQLModel, table=True\\):",
+            "class \\1(WithMetadata, table=True):",
             base,
         )
 
