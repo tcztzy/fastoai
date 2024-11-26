@@ -1,6 +1,6 @@
 from typing import Annotated, Literal, cast
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from openai.types.beta.assistant_create_params import AssistantCreateParams
 from openai.types.beta.assistant_deleted import AssistantDeleted
 from openai.types.beta.assistant_update_params import AssistantUpdateParams
@@ -37,14 +37,14 @@ async def list_assistants(
 ) -> AsyncCursorPage[Assistant]:
     statement = select(Assistant).order_by(getattr(col(Assistant.created_at), order)())
     if after is not None:
-        after_assistant = session.get(Assistant, after)
+        after_assistant = await session.get_one(Assistant, after)
         statement = statement.where(
             Assistant.created_at < after_assistant.created_at
             if order == "desc"
             else Assistant.created_at > after_assistant.created_at
         )
     if before is not None:
-        before_assistant = session.get(Assistant, before)
+        before_assistant = await session.get_one(Assistant, before)
         statement = statement.where(
             Assistant.created_at > before_assistant.created_at
             if order == "desc"
@@ -56,7 +56,7 @@ async def list_assistants(
         kwargs["first_id"] = assistants[0].id
         kwargs["last_id"] = assistants[-1].id
     if len(assistants) == limit:
-        after_assistant = session.get(Assistant, assistants[-1].id)
+        after_assistant = await session.get_one(Assistant, assistants[-1].id)
         statement = (
             select(Assistant)
             .order_by(getattr(col(Assistant.created_at), order)())
@@ -74,9 +74,7 @@ async def retrieve_assistant(
     assistant_id: str,
     session: SessionDependency,
 ) -> Assistant:
-    assistant = await session.get(Assistant, assistant_id)
-    if assistant is None:
-        raise HTTPException(status_code=404, detail="Assistant not found")
+    assistant = await session.get_one(Assistant, assistant_id)
     return assistant
 
 
@@ -86,9 +84,7 @@ async def update_assistant(
     params: RootModel[AssistantUpdateParams],
     session: SessionDependency,
 ) -> Assistant:
-    assistant = await session.get(Assistant, assistant_id)
-    if assistant is None:
-        raise HTTPException(status_code=404, detail="Assistant not found")
+    assistant = await session.get_one(Assistant, assistant_id)
     obj = cast(AssistantUpdateParams, params.model_dump(exclude_unset=True))
     assistant = Assistant.model_validate(assistant.model_dump() | obj)
     await session.commit()
@@ -100,9 +96,7 @@ async def delete_assistant(
     assistant_id: str,
     session: SessionDependency,
 ) -> AssistantDeleted:
-    assistant = await session.get(Assistant, assistant_id)
-    if assistant is None:
-        raise HTTPException(status_code=404, detail="Assistant not found")
+    assistant = await session.get_one(Assistant, assistant_id)
     await session.delete(assistant)
     await session.commit()
     return AssistantDeleted(id=assistant_id, deleted=True, object="assistant.deleted")

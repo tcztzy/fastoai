@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
@@ -89,14 +89,10 @@ async def create_run(
     session: SessionDependency,
     client: OpenAIDependency,
 ):
-    if not params.stream:
+    if not params.root["stream"]:
         raise NotImplementedError("Non-streaming is not yet supported")
-    assistant = session.get(Assistant, params.assistant_id)
-    if assistant is None:
-        raise HTTPException(status_code=404, detail="Assistant not found")
-    thread = session.get(Thread, thread_id)
-    if thread is None:
-        raise HTTPException(status_code=404, detail="Thread not found")
+    assistant = await session.get_one(Assistant, params.root["assistant_id"])
+    thread = await session.get_one(Thread, thread_id)
     openai_run_args = {k: v for k, v in params.model_dump().items() if v}
     if "instructions" not in openai_run_args:
         openai_run_args["instructions"] = ""

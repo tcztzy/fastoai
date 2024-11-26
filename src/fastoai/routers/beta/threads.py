@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from openai.types.beta.thread_create_params import ThreadCreateParams
 from openai.types.beta.threads.message_create_params import MessageCreateParams
 from pydantic import RootModel
@@ -35,7 +35,5 @@ async def create_thread(
 
 @router.get("/threads/{thread_id}")
 async def retrieve_thread(*, thread_id: str, session: SessionDependency) -> Thread:
-    thread = await session.get(Thread, thread_id)
-    if thread is None:
-        raise HTTPException(status_code=404, detail="Thread not found")
+    thread = await session.get_one(Thread, thread_id)
     return thread

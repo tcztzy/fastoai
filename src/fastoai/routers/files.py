@@ -1,7 +1,7 @@
 from shutil import copyfileobj
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import select
 
@@ -50,9 +50,7 @@ async def retrieve_file(
     file_id: str,
     session: SessionDependency,
 ) -> FileObject:
-    file = await session.get(FileObject, file_id)
-    if file is None:
-        raise HTTPException(status_code=404, detail="File not found")
+    file = await session.get_one(FileObject, file_id)
     return FileObject.model_validate(file.model_dump())
 
 
@@ -62,9 +60,7 @@ async def retrieve_file_content(
     settings: SettingsDependency,
     session: SessionDependency,
 ):
-    file = await session.get(FileObject, file_id)
-    if file is None:
-        raise HTTPException(status_code=404, detail="File not found")
+    file = await session.get_one(FileObject, file_id)
     return FileResponse(settings.upload_dir / file.id, filename=file.filename)
 
 
@@ -73,9 +69,7 @@ async def delete_file(
     file_id: str,
     session: SessionDependency,
 ):
-    file = await session.get(FileObject, file_id)
-    if file is None:
-        raise HTTPException(status_code=404, detail="File not found")
+    file = await session.get_one(FileObject, file_id)
     await session.delete(file)
     await session.commit()
     return FileObject.model_validate(file.model_dump())

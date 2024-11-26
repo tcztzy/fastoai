@@ -2,13 +2,13 @@ import inspect
 import re
 from itertools import chain
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openai._models import BaseModel
 from pydantic.alias_generators import to_snake
 
-from ..dependencies import get_settings
 from ._metadata import WithMetadata as WithMetadata
-from .user import User, get_current_active_user
+from .user import APIKey, User
 
 Imports = list[tuple[str, tuple[str, ...]]]
 
@@ -173,7 +173,7 @@ def generate_module(cls: type[BaseModel]):
     return obj
 
 
-if get_settings().generate_models:
+if TYPE_CHECKING:
     from openai.types.beta.assistant import Assistant
     from openai.types.beta.thread import Thread
     from openai.types.beta.threads.message import Message
@@ -192,6 +192,7 @@ from .generated.run_step import RunStep  # noqa: E402
 from .generated.thread import Thread  # noqa: E402
 
 __all__ = [
+    "APIKey",
     "User",
     "get_current_active_user",
     "Assistant",

@@ -7,13 +7,12 @@ from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 from openai.types.chat.completion_create_params import CompletionCreateParams
 from pydantic import RootModel
 
-from ..dependencies import OpenAIDependency
-from ..models import get_current_active_user
+from ..dependencies import OpenAIDependency, get_user
 from .beta import router as beta_router
 from .files import router as files_router
 from .models import router as models_router
 
-router = APIRouter(dependencies=[Depends(get_current_active_user)])
+router = APIRouter(dependencies=[Depends(get_user)])
 
 chat_router = APIRouter(tags=["Chat"])
 
