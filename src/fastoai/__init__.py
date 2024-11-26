@@ -1,14 +1,19 @@
 import importlib.metadata
 import inspect
 import re
+from contextlib import asynccontextmanager
 from pathlib import Path
+
+import fsspec
+import yaml
+from fastapi import FastAPI
 
 try:
     __version__ = importlib.metadata.version(__name__)
 except importlib.metadata.PackageNotFoundError:
     __version__ = "1.0.0"
 
-from .applications import FastOAI as FastOAI
+from .routers import router
 from .settings import settings
 
 if settings.generate_requests:
@@ -150,3 +155,22 @@ from pydantic import BaseModel
 
     with Path(__file__).parent.joinpath("requests.py").open("w", encoding="utf-8") as f:
         f.write("\n\n".join([HEADER] + body))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await settings.session.close()
+
+
+app = FastAPI(title="FastOAI", version=__version__, lifespan=lifespan)
+app.include_router(router)
+with fsspec.open(
+    "filecache::github://openai:openai-openapi@master/openapi.yaml",
+    filecache={"cache_storage": str(Path(__file__).parent)},
+) as f:
+    schema = yaml.load(f, Loader=yaml.SafeLoader)
+original_schema = app.openapi()
+schema["info"] = original_schema["info"]
+del schema["servers"]
+app.openapi_schema = schema
