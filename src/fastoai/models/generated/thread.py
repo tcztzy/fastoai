@@ -8,13 +8,14 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import JSON, Column, Field, SQLModel
 
 from .._types import as_sa_type
+from .._utils import now, random_id_with_prefix
 
 
 class Thread(SQLModel, table=True):
-    id: Annotated[str, Field(primary_key=True)]
+    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("thread_"))]
     """The identifier, which can be referenced in API endpoints."""
 
-    created_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=now)]
     """The Unix timestamp (in seconds) for when the thread was created."""
 
     metadata_: Annotated[object | None, Field(sa_column=Column("metadata", MutableDict.as_mutable(JSON)))] = None

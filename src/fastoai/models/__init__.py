@@ -4,7 +4,6 @@ from itertools import chain
 from pathlib import Path
 
 from openai._models import BaseModel
-from openai.types.beta.assistant import Assistant
 from pydantic.alias_generators import to_snake
 
 from ..settings import settings
@@ -72,10 +71,11 @@ def generate_module(cls: type[BaseModel]):
         + [
             ("datetime", ("datetime",)),
             ("typing", ("Annotated",)),
-            ("pydantic", ("RootModel", "WithJsonSchema", "field_serializer")),
+            ("pydantic", ("RootModel", "field_serializer")),
             ("sqlalchemy.ext.mutable", ("MutableDict", "MutableList")),
             ("sqlmodel", ("JSON", "Column", "Enum", "Field", "SQLModel")),
             (".._types", ("as_sa_type",)),
+            (".._utils", ("now", "random_id_with_prefix")),
         ]
         + ([(cls.__module__, exports)] if len(exports) else [])
     )
@@ -85,12 +85,32 @@ def generate_module(cls: type[BaseModel]):
     base = base.replace(
         f"class {name}(BaseModel):", f"class {name}(SQLModel, table=True):"
     )
-    base = re.sub("id: str", "id: Annotated[str, Field(primary_key=True)]", base)
+    if cls is FileObject:
+        base = re.sub(
+            "id:",
+            '__tablename__ = "file"\n\n    id:',
+            base,
+        )
+    prefix_map = {
+        Assistant: "asst_",
+        Thread: "thread_",
+        Message: "msg_",
+        Run: "run_",
+        RunStep: "step_",
+        FileObject: "file-",
+    }
+    base = re.sub(
+        "id: str",
+        "id: Annotated[str, Field(primary_key=True, default_factory="
+        f'random_id_with_prefix("{prefix_map[cls]}"))]',
+        base,
+    )
     metadata_pattern = re.compile(r"metadata: (.+) = None(\s*\"\"\"[\s\S]*?\"\"\"\s*)")
     if (mo := metadata_pattern.search(base)) is not None:
         base = re.sub(
             metadata_pattern,
-            rf"""metadata_: Annotated[{mo.group(1)}, Field(sa_column=Column("metadata", MutableDict.as_mutable(JSON)))] = None\2""",
+            rf'metadata_: Annotated[{mo.group(1)}, Field(sa_column=Column("metadata", '
+            "MutableDict.as_mutable(JSON)))] = None\\2",
             base,
         )
 
@@ -126,7 +146,9 @@ def generate_module(cls: type[BaseModel]):
             base,
         )
 
-    base = base.replace("_at: int", "_at: datetime")
+    base = base.replace(
+        "_at: int", "_at: Annotated[datetime, Field(default_factory=now)]"
+    )
     base = base.replace("_at: Optional[int]", "_at: datetime | None")
     datetime_fields = re.findall(r"(\w+_at)(?=:)", base)
 

@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from sqlmodel import select
 
 from ..models import FileObject
-from ..schema import ListObject
+from ..pagination import AsyncCursorPage
 from ..settings import Settings, get_settings
 
 router = APIRouter(tags=["Files"])
@@ -37,9 +37,9 @@ async def upload_file(
 @router.get("/files")
 async def list_files(
     settings: Settings = Depends(get_settings),
-) -> ListObject[FileObject]:
+) -> AsyncCursorPage[FileObject]:
     files = settings.session.exec(select(FileObject)).all()
-    return ListObject[FileObject](
+    return AsyncCursorPage[FileObject](
         data=[FileObject.model_validate(file.model_dump()) for file in files]
     )
 

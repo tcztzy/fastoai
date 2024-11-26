@@ -26,4 +26,11 @@ def serve(
     reload: bool = False,
 ):
     """Serve the FastAPI application."""
-    uvicorn.run("fastoai:app", host=host, port=port, reload=reload)
+    print(settings.generate_models)
+    uvicorn.run(
+        "fastoai:app",
+        host=host,
+        port=port,
+        reload=reload,
+        reload_excludes=["generated/*.py"],
+    )

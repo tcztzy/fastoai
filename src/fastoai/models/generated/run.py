@@ -20,13 +20,14 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import JSON, Column, Field, SQLModel
 
 from .._types import as_sa_type
+from .._utils import now, random_id_with_prefix
 
 
 class Run(SQLModel, table=True):
-    id: Annotated[str, Field(primary_key=True)]
+    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("run_"))]
     """The identifier, which can be referenced in API endpoints."""
 
-    assistant_id: Annotated[str, Field(primary_key=True)]
+    assistant_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("run_"))]
     """
     The ID of the
     [assistant](https://platform.openai.com/docs/api-reference/assistants) used for
@@ -39,7 +40,7 @@ class Run(SQLModel, table=True):
     completed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run was completed."""
 
-    created_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=now)]
     """The Unix timestamp (in seconds) for when the run was created."""
 
     expires_at: datetime | None = None
@@ -138,7 +139,7 @@ class Run(SQLModel, table=True):
     `incomplete`, or `expired`.
     """
 
-    thread_id: Annotated[str, Field(primary_key=True)]
+    thread_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("run_"))]
     """
     The ID of the [thread](https://platform.openai.com/docs/api-reference/threads)
     that was executed on as a part of this run.

@@ -9,10 +9,11 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import JSON, Column, Enum, Field, SQLModel
 
 from .._types import as_sa_type
+from .._utils import now, random_id_with_prefix
 
 
 class Message(SQLModel, table=True):
-    id: Annotated[str, Field(primary_key=True)]
+    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("msg_"))]
     """The identifier, which can be referenced in API endpoints."""
 
     assistant_id: str | None = None
@@ -31,7 +32,7 @@ class Message(SQLModel, table=True):
     content: Annotated[list[MessageContent], Field(sa_type=as_sa_type(list[MessageContent]))]
     """The content of the message in array of text and/or images."""
 
-    created_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=now)]
     """The Unix timestamp (in seconds) for when the message was created."""
 
     incomplete_at: datetime | None = None
@@ -62,7 +63,7 @@ class Message(SQLModel, table=True):
     The status of the message, which can be either `in_progress`, `incomplete`, or
     `completed`.
     """
-    thread_id: Annotated[str, Field(primary_key=True)]
+    thread_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("msg_"))]
     """
     The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
     this message belongs to.

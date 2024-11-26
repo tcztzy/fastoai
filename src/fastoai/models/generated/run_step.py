@@ -8,13 +8,14 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import JSON, Column, Enum, Field, SQLModel
 
 from .._types import as_sa_type
+from .._utils import now, random_id_with_prefix
 
 
 class RunStep(SQLModel, table=True):
-    id: Annotated[str, Field(primary_key=True)]
+    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]
     """The identifier of the run step, which can be referenced in API endpoints."""
 
-    assistant_id: Annotated[str, Field(primary_key=True)]
+    assistant_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]
     """
     The ID of the
     [assistant](https://platform.openai.com/docs/api-reference/assistants)
@@ -27,7 +28,7 @@ class RunStep(SQLModel, table=True):
     completed_at: datetime | None = None
     """The Unix timestamp (in seconds) for when the run step completed."""
 
-    created_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=now)]
     """The Unix timestamp (in seconds) for when the run step was created."""
 
     expired_at: datetime | None = None
@@ -53,7 +54,7 @@ class RunStep(SQLModel, table=True):
     a maximum of 512 characters long.
     """
 
-    run_id: Annotated[str, Field(primary_key=True)]
+    run_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]
     """
     The ID of the [run](https://platform.openai.com/docs/api-reference/runs) that
     this run step is a part of.
@@ -67,7 +68,7 @@ class RunStep(SQLModel, table=True):
     step_details: Annotated[StepDetails, Field(sa_type=as_sa_type(StepDetails))]
     """The details of the run step."""
 
-    thread_id: Annotated[str, Field(primary_key=True)]
+    thread_id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("step_"))]
     """
     The ID of the [thread](https://platform.openai.com/docs/api-reference/threads)
     that was run.

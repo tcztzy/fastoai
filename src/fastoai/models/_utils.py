@@ -1,11 +1,9 @@
 import secrets
 from datetime import UTC, datetime
-from functools import partial
-
-RANDOM_STRING_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+from string import ascii_letters, digits
 
 
-def get_random_string(length, allowed_chars=RANDOM_STRING_CHARS):
+def get_random_string(length, allowed_chars=ascii_letters + digits):
     """Return a securely generated random string.
 
     The bit length of the returned value can be calculated with the formula:
@@ -18,12 +16,9 @@ def get_random_string(length, allowed_chars=RANDOM_STRING_CHARS):
     return "".join(secrets.choice(allowed_chars) for _ in range(length))
 
 
-random_id = partial(get_random_string, 24)  # (26 * 2 + 10) ^ 24 > uuid4
-
-
 def random_id_with_prefix(prefix: str):
     def _inner():
-        return f"{prefix}{random_id()}"
+        return f"{prefix}{get_random_string(24)}"  # (26 * 2 + 10) ^ 24 > uuid4
 
     return _inner
 

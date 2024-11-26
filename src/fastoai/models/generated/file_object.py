@@ -5,15 +5,19 @@ from typing import Annotated, Literal
 from pydantic import field_serializer
 from sqlmodel import Enum, Field, SQLModel
 
+from .._utils import now, random_id_with_prefix
+
 
 class FileObject(SQLModel, table=True):
-    id: Annotated[str, Field(primary_key=True)]
+    __tablename__ = "file"
+
+    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("file-"))]
     """The file identifier, which can be referenced in the API endpoints."""
 
     bytes: int
     """The size of the file, in bytes."""
 
-    created_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=now)]
     """The Unix timestamp (in seconds) for when the file was created."""
 
     filename: str

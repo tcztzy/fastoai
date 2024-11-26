@@ -8,22 +8,18 @@ from pydantic import Field, RootModel
 from sqlmodel import col, select
 
 from ...models import Assistant
-from ...schema import ListObject
+from ...pagination import AsyncCursorPage
 from ...settings import Settings, get_settings
 
 router = APIRouter()
 
 
-@router.post(
-    "/assistants", response_model_exclude_unset=True, response_model_by_alias=True
-)
+@router.post("/assistants")
 async def create_assistant(
     params: RootModel[AssistantCreateParams],
     settings: Settings = Depends(get_settings),
 ) -> Assistant:
-    assistant = Assistant.model_validate(
-        params.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
-    )
+    assistant = Assistant.model_validate(params.model_dump())
     settings.session.add(assistant)
     await settings.session.commit()
     await settings.session.refresh(assistant)
@@ -37,7 +33,7 @@ async def list_assistants(
     after: str | None = None,
     before: str | None = None,
     settings: Settings = Depends(get_settings),
-) -> ListObject[Assistant]:
+) -> AsyncCursorPage[Assistant]:
     statement = select(Assistant).order_by(getattr(col(Assistant.created_at), order)())
     if after is not None:
         after_assistant = settings.session.get(Assistant, after)
@@ -53,7 +49,7 @@ async def list_assistants(
             if order == "desc"
             else Assistant.created_at < before_assistant.created_at
         )
-    assistants = settings.session.exec(statement.limit(limit)).all()
+    assistants = (await settings.session.exec(statement.limit(limit))).all()
     kwargs = {}
     if len(assistants) > 0:
         kwargs["first_id"] = assistants[0].id
@@ -69,10 +65,7 @@ async def list_assistants(
                 else Assistant.created_at > after_assistant.created_at
             )
         )
-        has_more = len(settings.session.exec(statement.limit(1)).all()) == 1
-    else:
-        has_more = False
-    return ListObject[Assistant](data=assistants, has_more=has_more, **kwargs)
+    return AsyncCursorPage[Assistant](data=assistants, **kwargs)
 
 
 @router.get("/assistants/{assistant_id}")

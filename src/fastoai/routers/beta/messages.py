@@ -5,7 +5,7 @@ from pydantic import RootModel
 from sqlmodel import select
 
 from ...models import Message
-from ...schema import ListObject
+from ...pagination import AsyncCursorPage
 from ...settings import Settings, get_settings
 
 router = APIRouter()
@@ -45,8 +45,8 @@ async def create_message(
 async def list_messages(
     thread_id: str,
     settings: Settings = Depends(get_settings),
-) -> ListObject[OpenAIMessage]:
-    messages = settings.session.exec(
+) -> AsyncCursorPage[OpenAIMessage]:
+    messages = await settings.session.exec(
         select(Message).where(Message.thread_id == thread_id)
-    ).all()
-    return ListObject[OpenAIMessage](data=[message.data for message in messages])
+    )
+    return AsyncCursorPage[OpenAIMessage](data=messages.all())
