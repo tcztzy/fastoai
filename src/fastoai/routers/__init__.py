@@ -9,7 +9,7 @@ from pydantic import RootModel
 
 from ..dependencies import OpenAIDependency
 from ..models import get_current_active_user
-from .beta.assistants import router as beta_router
+from .beta import router as beta_router
 from .files import router as files_router
 from .models import router as models_router
 
