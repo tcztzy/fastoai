@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.message_create_params import MessageCreateParams
 from pydantic import RootModel
 from sqlmodel import select
 
+from ...dependencies import SessionDependency
 from ...models import Message
 from ...pagination import AsyncCursorPage
-from ...settings import Settings, get_settings
 
 router = APIRouter()
 
@@ -15,7 +15,7 @@ router = APIRouter()
 async def create_message(
     thread_id: str,
     params: RootModel[MessageCreateParams],
-    settings: Settings = Depends(get_settings),
+    session: SessionDependency,
 ):
     params = params.root
     if isinstance(params.content, str):
@@ -35,18 +35,16 @@ async def create_message(
             role=params.role,
         ),
     )
-    settings.session.add(message)
-    settings.session.commit()
-    settings.session.refresh(message)
+    session.add(message)
+    await session.commit()
+    await session.refresh(message)
     return message
 
 
 @router.get("/threads/{thread_id}/messages")
 async def list_messages(
     thread_id: str,
-    settings: Settings = Depends(get_settings),
+    session: SessionDependency,
 ) -> AsyncCursorPage[OpenAIMessage]:
-    messages = await settings.session.exec(
-        select(Message).where(Message.thread_id == thread_id)
-    )
+    messages = await session.exec(select(Message).where(Message.thread_id == thread_id))
     return AsyncCursorPage[OpenAIMessage](data=messages.all())

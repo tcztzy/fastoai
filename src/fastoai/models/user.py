@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr
 from sqlmodel import JSON, Field, Relationship, SQLModel
 
-from ..settings import settings
+from ..dependencies import SessionDependency, SettingsDependency
 from ._utils import now, random_id_with_prefix
 
 security = HTTPBearer()
@@ -48,18 +48,30 @@ class APIKey(SQLModel, table=True):
     created_at: datetime = Field(default_factory=now)
 
 
-def get_api_key(api_key: str) -> APIKey | None:
+async def get_api_key(
+    *,
+    api_key: str,
+    settings: SettingsDependency,
+    session: SessionDependency,
+) -> APIKey | None:
     """Get the API key."""
     if not settings.auth_enabled:
         return APIKey(id=api_key, user=User(name="test", password="test"))
-    return settings.session.get(APIKey, api_key)
+    return await session.get(APIKey, api_key)
 
 
-def get_current_user(
+async def get_current_user(
+    *,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    settings: SettingsDependency,
+    session: SessionDependency,
 ) -> User:
     """Get the current user."""
-    api_key = get_api_key(credentials.credentials)
+    api_key = await get_api_key(
+        credentials=credentials.credentials,
+        settings=settings,
+        session=session,
+    )
     if api_key is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
@@ -67,7 +79,7 @@ def get_current_user(
     return api_key.user
 
 
-def get_current_active_user(
+async def get_current_active_user(
     user: User = Depends(get_current_user),
 ) -> User:
     """Get the current active user."""

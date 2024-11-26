@@ -9,13 +9,11 @@ except importlib.metadata.PackageNotFoundError:
     __version__ = "1.0.0"
 
 from .routers import router
-from .settings import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
-    await settings.session.close()
 
 
 app = FastAPI(title="FastOAI", version=__version__, lifespan=lifespan)

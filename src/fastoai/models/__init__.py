@@ -6,7 +6,7 @@ from pathlib import Path
 from openai._models import BaseModel
 from pydantic.alias_generators import to_snake
 
-from ..settings import settings
+from ..dependencies import get_settings
 from ._metadata import WithMetadata as WithMetadata
 from .user import User, get_current_active_user
 
@@ -173,7 +173,7 @@ def generate_module(cls: type[BaseModel]):
     return obj
 
 
-if settings.generate_models:
+if get_settings().generate_models:
     from openai.types.beta.assistant import Assistant
     from openai.types.beta.thread import Thread
     from openai.types.beta.threads.message import Message

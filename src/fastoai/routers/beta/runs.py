@@ -4,9 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from openai import AsyncOpenAI
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
 from openai.types.beta.threads.run_create_params import RunCreateParams
@@ -18,6 +17,7 @@ from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel, RootModel
 
+from ...dependencies import OpenAIDependency, SessionDependency
 from ...models import (
     Assistant,
     Message,
@@ -25,8 +25,6 @@ from ...models import (
     RunStep,
     Thread,
 )
-from ...settings import Settings, get_settings, settings
-from .._backend import get_openai
 
 
 @dataclass
@@ -38,7 +36,7 @@ class EventData:
         return f"event: {self.event}\ndata: {self.data.model_dump_json()}\n\n"
 
 
-def run_decorator(run_model: Run):
+def run_decorator(run_model: Run, session: SessionDependency):
     def event_decorator(generator_func):
         @wraps(generator_func)
         async def wrapper(*args, **kwargs):
@@ -53,8 +51,8 @@ def run_decorator(run_model: Run):
                         yield value
 
                     run_model.status = "completed"
-                    settings.session.add(run_model)
-                    settings.session.commit()
+                    session.add(run_model)
+                    await session.commit()
                     yield str(
                         EventData(
                             event=f"{run_model.object}.completed",
@@ -63,16 +61,16 @@ def run_decorator(run_model: Run):
                     )
             except TimeoutError:
                 run_model.status = "expired"
-                settings.session.add(run_model)
-                settings.session.commit()
+                session.add(run_model)
+                await session.commit()
                 yield str(
                     EventData(event=f"{run_model.object}.expired", data=run_model)
                 )
             except Exception as e:
                 run_model.status = "failed"
                 run_model.last_error = LastError(code="server_error", message=str(e))
-                settings.session.add(run_model)
-                settings.session.commit()
+                session.add(run_model)
+                await session.commit()
                 yield str(EventData(event=f"{run_model.object}.failed", data=run_model))
             yield "event: done\ndata: [DONE]\n"
 
@@ -88,15 +86,15 @@ router = APIRouter()
 async def create_run(
     thread_id: str,
     params: RootModel[RunCreateParams],
-    settings: Settings = Depends(get_settings),
-    client: AsyncOpenAI = Depends(get_openai),
+    session: SessionDependency,
+    client: OpenAIDependency,
 ):
     if not params.stream:
         raise NotImplementedError("Non-streaming is not yet supported")
-    assistant = settings.session.get(Assistant, params.assistant_id)
+    assistant = session.get(Assistant, params.assistant_id)
     if assistant is None:
         raise HTTPException(status_code=404, detail="Assistant not found")
-    thread = settings.session.get(Thread, thread_id)
+    thread = session.get(Thread, thread_id)
     if thread is None:
         raise HTTPException(status_code=404, detail="Thread not found")
     openai_run_args = {k: v for k, v in params.model_dump().items() if v}
@@ -134,7 +132,7 @@ async def create_run(
                 thread_id=thread.id,
             ),
         )
-        settings.session.add(message)
+        session.add(message)
         step = RunStep(
             run_id=run.id,
             assistant_id=assistant.id,
@@ -155,13 +153,13 @@ async def create_run(
             ),
         )
         yield str(EventData(event=f"{step.object}.created", data=step))
-        settings.session.add(step)
-        settings.session.commit()
-        settings.session.refresh(step)
+        session.add(step)
+        await session.commit()
+        await session.refresh(step)
         yield str(EventData(event=f"{step.object}.in_progress", data=step))
         yield str(EventData(event=f"{message.object}.created", data=message))
-        settings.session.commit()
-        settings.session.refresh(message)
+        await session.commit()
+        await session.refresh(message)
         yield "event: thread.message.in_progress\n"
         yield f"data: {message.model_dump_json()}\n\n"
         async for part in await client.chat.completions.create(
@@ -195,9 +193,9 @@ async def create_run(
 
     @run_decorator(run)
     async def xrun():
-        settings.session.add(run)
-        settings.session.commit()
-        settings.session.refresh(run)
+        session.add(run)
+        await session.commit()
+        await session.refresh(run)
         yield str(EventData(event=f"{run.object}.queued", data=run))
 
         yield str(EventData(event=f"{run.object}.in_progress", data=run))

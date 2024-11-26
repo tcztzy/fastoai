@@ -1,10 +1,7 @@
-from functools import cached_property, lru_cache
 from pathlib import Path
 
 from pydantic import Field, HttpUrl
 from pydantic_settings import BaseSettings
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class OpenAISettings(BaseSettings, env_prefix="openai_"):
@@ -26,22 +23,3 @@ class Settings(BaseSettings, env_prefix="fastoai_"):
 
     def model_post_init(self, __context):
         self.upload_dir.mkdir(parents=True, exist_ok=True)
-
-    @cached_property
-    def engine(self):
-        """Get engine."""
-        return create_async_engine(self.database_url)
-
-    @cached_property
-    def session(self):
-        """Get session."""
-        return AsyncSession(self.engine)
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """Get settings."""
-    return Settings()
-
-
-settings = get_settings()
