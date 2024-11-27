@@ -1,13 +1,17 @@
 from shutil import copyfileobj
-from typing import Literal
+from typing import Annotated, cast
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Form, Query, UploadFile
 from fastapi.responses import FileResponse
-from sqlmodel import select
+from openai.types.file_deleted import FileDeleted
+from openai.types.file_list_params import FileListParams
+from openai.types.file_purpose import FilePurpose
+from sqlmodel import col, select
 
 from ..dependencies import SessionDependency, SettingsDependency
 from ..models import FileObject
 from ..pagination import AsyncCursorPage
+from ._utils import create_model_from
 
 router = APIRouter(tags=["Files"])
 
@@ -15,7 +19,7 @@ router = APIRouter(tags=["Files"])
 @router.post("/files")
 async def upload_file(
     upload_file: UploadFile,
-    purpose: Literal["avatar", "attachment"],
+    purpose: Annotated[FilePurpose, Form()],
     settings: SettingsDependency,
     session: SessionDependency,
 ) -> FileObject:
@@ -37,9 +41,23 @@ async def upload_file(
 
 @router.get("/files")
 async def list_files(
+    q: Annotated[create_model_from(FileListParams), Query()],  # type: ignore
     session: SessionDependency,
 ) -> AsyncCursorPage[FileObject]:
-    files = (await session.exec(select(FileObject))).all()
+    params = cast(FileListParams, q.model_dump())
+    statement = select(FileObject)
+    if purpose := params.get("purpose"):
+        statement = statement.where(FileObject.purpose == purpose)
+    if order := params.get("order"):
+        statement = statement.order_by(getattr(col(FileObject.created_at), order)())
+    if after := params.get("after"):
+        all_files = (await session.exec(statement)).all()
+        after_file = await session.get_one(FileObject, after)
+        offset = all_files.index(after_file) + 1
+        statement = statement.offset(offset)
+    if limit := params.get("limit"):
+        statement = statement.limit(limit)
+    files = (await session.exec(statement)).all()
     return AsyncCursorPage[FileObject](
         data=[FileObject.model_validate(file.model_dump()) for file in files]
     )
@@ -64,7 +82,7 @@ async def retrieve_file_content(
     return FileResponse(settings.upload_dir / file.id, filename=file.filename)
 
 
-@router.delete("/files/{file_id}")
+@router.delete("/files/{file_id}", response_model=FileDeleted)
 async def delete_file(
     file_id: str,
     session: SessionDependency,
@@ -72,4 +90,4 @@ async def delete_file(
     file = await session.get_one(FileObject, file_id)
     await session.delete(file)
     await session.commit()
-    return FileObject.model_validate(file.model_dump())
+    return FileDeleted(id=file_id, deleted=True, object="file")

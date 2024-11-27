@@ -9,7 +9,7 @@ from .dependencies import get_settings
 app = typer.Typer()
 
 
-result = urlparse(str(get_settings().base_url))
+result = urlparse(get_settings().base_url)
 DEFAULT_HOST = result.hostname or "127.0.0.1"
 DEFAULT_PORT = result.port or 8000
 

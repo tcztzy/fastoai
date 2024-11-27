@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from openai import AsyncOpenAI
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import APIKey, User
@@ -20,9 +20,13 @@ def get_settings() -> Settings:
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
 
 
-async def get_session(settings: SettingsDependency):
+@lru_cache
+def get_engine(settings: SettingsDependency):
+    return create_async_engine(settings.database_url)
+
+
+async def get_session(engine: Annotated[AsyncEngine, Depends(get_engine)]):
     """Get session."""
-    engine = create_async_engine(settings.database_url)
     async with AsyncSession(engine) as session:
         yield session
 
