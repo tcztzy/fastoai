@@ -15,8 +15,12 @@ class AsyncCursorPage(AsyncCursorPage[_T], Generic[_T]):
 
     @computed_field
     def first_id(self) -> str | None:
+        if not self.data:
+            return None
         return cast(CursorPageItem, self.data[0]).id
 
     @computed_field
     def last_id(self) -> str | None:
+        if not self.data:
+            return None
         return cast(CursorPageItem, self.data[-1]).id

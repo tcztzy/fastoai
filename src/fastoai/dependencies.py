@@ -1,3 +1,4 @@
+import asyncio
 from functools import lru_cache
 from typing import Annotated
 
@@ -5,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import APIKey, User
@@ -22,7 +24,15 @@ SettingsDependency = Annotated[Settings, Depends(get_settings)]
 
 @lru_cache
 def get_engine(settings: SettingsDependency):
-    return create_async_engine(settings.database_url)
+    engine = create_async_engine(settings.database_url)
+
+    async def _run():
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.drop_all)
+            await conn.run_sync(SQLModel.metadata.create_all)
+
+    asyncio.run(_run())
+    return engine
 
 
 async def get_session(engine: Annotated[AsyncEngine, Depends(get_engine)]):
@@ -35,7 +45,7 @@ SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 
 
 @lru_cache
-async def get_openai(settings: SettingsDependency):
+def get_openai(settings: SettingsDependency):
     """Get OpenAI client."""
     return AsyncOpenAI(**settings.openai.model_dump())
 

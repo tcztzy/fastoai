@@ -9,12 +9,9 @@ wheels/
 # venv
 .venv
 
-.python-version
-requirements-dev.lock
-requirements.lock
-
 # sqlite3
 *.sqlite3
+*.db
 
 # dotenv
 .env*

@@ -34,6 +34,16 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "pyyaml>=6.0.2",
 ]
+universal = true
+
+[tool.uv]
+managed = true
+dev-dependencies = [
+    "fsspec[github]>=2024.10.0",
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.3",
+    "pyyaml>=6.0.2",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true

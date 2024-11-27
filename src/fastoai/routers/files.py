@@ -18,21 +18,21 @@ router = APIRouter(tags=["Files"])
 
 @router.post("/files")
 async def upload_file(
-    upload_file: UploadFile,
+    file: UploadFile,
     purpose: Annotated[FilePurpose, Form()],
     settings: SettingsDependency,
     session: SessionDependency,
 ) -> FileObject:
     file_object = FileObject.model_validate(
         {
-            "bytes": upload_file.size,
-            "filename": upload_file.filename,
+            "bytes": file.size,
+            "filename": file.filename,
             "purpose": purpose,
             "status": "uploaded",
         }
     )
     with (settings.upload_dir / file_object.id).open("wb") as file:
-        copyfileobj(upload_file.file, file)
+        copyfileobj(file.file, file)
     session.add(file_object)
     await session.commit()
     await session.refresh(file_object)
