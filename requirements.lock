@@ -68,7 +68,7 @@ markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-openai==1.55.1
+openai==1.55.2
     # via fastoai
 pydantic==2.10.2
     # via fastapi

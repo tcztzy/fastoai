@@ -6,14 +6,12 @@ from functools import wraps
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.run import LastError
 from openai.types.beta.threads.run_create_params import RunCreateParams
 from openai.types.beta.threads.runs.message_creation_step_details import (
     MessageCreation,
     MessageCreationStepDetails,
 )
-from openai.types.beta.threads.runs.run_step import RunStep as OpenAIRunStep
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel, RootModel
 
@@ -22,7 +20,7 @@ from ...models import (
     Assistant,
     Message,
     Run,
-    RunStep,
+    Step,
     Thread,
 )
 
@@ -45,7 +43,7 @@ def run_decorator(run_model: Run, session: SessionDependency):
                 async with timeout(
                     None
                     if run_model.expires_at is None
-                    else run_model.expires_at - datetime.now().timestamp()
+                    else (run_model.expires_at - datetime.now()).total_seconds()
                 ):
                     async for value in generator_func(*args, **kwargs):
                         yield value
@@ -89,7 +87,7 @@ async def create_run(
     session: SessionDependency,
     client: OpenAIDependency,
 ):
-    if not params.root["stream"]:
+    if not params.root.get("stream", False):
         raise NotImplementedError("Non-streaming is not yet supported")
     assistant = await session.get_one(Assistant, params.root["assistant_id"])
     thread = await session.get_one(Thread, thread_id)
@@ -111,41 +109,27 @@ async def create_run(
     instructions = run.instructions or assistant.instructions
     if instructions:
         messages.append({"role": "system", "content": instructions})
-    messages.extend(thread.messages)
+    messages.extend([m.model_dump() for m in thread.messages])  # type: ignore
 
     async def message_creation_step():
-        message = Message(
+        message = Message(  # type: ignore
             thread=thread,
             assistant=assistant,
             run=run,
-            data=OpenAIMessage(
-                id="dummy",
-                created_at=0,
-                content=[],
-                object="thread.message",
-                role="assistant",
-                status="in_progress",
-                thread_id=thread.id,
-            ),
+            content=[],
+            role="assistant",
+            status="in_progress",
         )
         session.add(message)
-        step = RunStep(
-            run_id=run.id,
-            assistant_id=assistant.id,
-            thread_id=thread.id,
-            data=OpenAIRunStep(
-                id="dummy",
-                created_at=0,
-                object="thread.run.step",
-                run_id=run.id,
-                thread_id=thread.id,
-                assistant_id=assistant.id,
-                status="in_progress",
+        step = Step(  # type: ignore
+            run=run,
+            thread=thread,
+            assistant=assistant,
+            status="in_progress",
+            type="message_creation",
+            step_details=MessageCreationStepDetails(
+                message_creation=MessageCreation(message_id=message.id),
                 type="message_creation",
-                step_details=MessageCreationStepDetails(
-                    message_creation=MessageCreation(message_id=message.id),
-                    type="message_creation",
-                ),
             ),
         )
         yield str(EventData(event=f"{step.object}.created", data=step))
@@ -187,7 +171,7 @@ async def create_run(
             )
             yield json.dumps(part) + "\n\n"
 
-    @run_decorator(run)
+    @run_decorator(run, session)
     async def xrun():
         session.add(run)
         await session.commit()

@@ -10,14 +10,7 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import APIKey, User
-from .settings import Settings
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """Get settings."""
-    return Settings()
-
+from .settings import Settings, get_settings
 
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
 
@@ -64,8 +57,9 @@ async def get_user(
     """Get the current user."""
     if not settings.auth_enabled:
         return APIKey(
-            id=credentials.credentials, user=User(name="test", password="test")
-        )
+            id=credentials.credentials,
+            user=User(name="test", password="test"),  # type: ignore
+        ).user
     api_key = await session.get(APIKey, credentials.credentials)
     if api_key is None:
         raise HTTPException(

@@ -1,6 +1,11 @@
 from typing import Annotated, Any, Self
 
-from pydantic.json_schema import WithJsonSchema
+from pydantic.json_schema import (
+    DEFAULT_REF_TEMPLATE,
+    GenerateJsonSchema,
+    JsonSchemaMode,
+    WithJsonSchema,
+)
 from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import JSON, Field, SQLModel
 
@@ -14,7 +19,7 @@ class WithMetadata(SQLModel):
         | None,
         Field(
             alias="metadata",
-            sa_type=MutableDict.as_mutable(JSON),
+            sa_type=MutableDict.as_mutable(JSON),  # type: ignore
             sa_column_kwargs={"name": "metadata"},
         ),
         WithJsonSchema({"type": "object"}),
@@ -64,8 +69,19 @@ class WithMetadata(SQLModel):
         return result
 
     @classmethod
-    def model_json_schema(cls, by_alias: bool = False, **kwargs) -> dict[str, Any]:
-        schema = super().model_json_schema(by_alias=by_alias, **kwargs)
+    def model_json_schema(
+        cls,
+        by_alias: bool = False,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = "validation",
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
         if by_alias and "metadata_" in schema["properties"]:
             schema["properties"]["metadata"] = schema["properties"].pop("metadata_")
         return schema

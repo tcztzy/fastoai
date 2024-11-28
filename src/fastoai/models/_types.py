@@ -28,7 +28,7 @@ class BaseModelType(sa.types.TypeDecorator[BaseModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: BaseModel | list[BaseModel] | None, _):
+    def process_bind_param(self, value: BaseModel | list[BaseModel] | None, _):  # type: ignore
         """Convert python native type to JSON string before storing in the database"""
         match value:
             case None:
@@ -40,7 +40,7 @@ class BaseModelType(sa.types.TypeDecorator[BaseModel]):
             case _:
                 return value
 
-    def process_result_value(self, value: Any, _):
+    def process_result_value(self, value: Any, _):  # type: ignore
         """Convert JSON string back to Python object after retrieving from the database"""
         v = None if value is None else self.pydantic_model_class.model_validate(value)
         return v.root if isinstance(v, RootModel) else v
@@ -60,7 +60,7 @@ class UnionModelType(sa.types.TypeDecorator[RootModel]):
         super().__init__(*args, **kwargs)
         self.pydantic_model_class = pydantic_model_class
 
-    def process_bind_param(self, value: RootModel | list[BaseModel] | None, _):
+    def process_bind_param(self, value: RootModel | list[BaseModel] | None, _):  # type: ignore
         """Convert python native type to JSON string before storing in the database"""
         match value:
             case None:
@@ -72,7 +72,7 @@ class UnionModelType(sa.types.TypeDecorator[RootModel]):
             case _:
                 return value
 
-    def process_result_value(self, value: Any, _):
+    def process_result_value(self, value: Any, _):  # type: ignore
         """Convert JSON string back to Python object after retrieving from the database"""
         return (
             None
@@ -86,7 +86,7 @@ class MutableBaseModel(Mutable, BaseModel):
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Allows SQLAlchmey Session to track mutable behavior"""
-        super().__setattr__(self, name, value)
+        super().__setattr__(name, value)
         self.changed()
 
     @classmethod
@@ -124,10 +124,10 @@ def _is_base_model(t: type):
     )
 
 
-def as_sa_type(type_: type):
+def as_sa_type(type_: type) -> type:
     try:
         if issubclass(type_, BaseModel):
-            return type(type_.__name__, (type_, MutableBaseModel), {}).as_mutable(
+            return type(type_.__name__, (type_, MutableBaseModel), {}).as_mutable(  # type: ignore
                 BaseModelType(type_)
             )
     except TypeError:
@@ -141,15 +141,15 @@ def as_sa_type(type_: type):
         return as_sa_type(t)
 
     if origin is list and _is_base_model(t):
-        return MutableList[t].as_mutable(BaseModelType(RootModel[type_]))
+        return MutableList[t].as_mutable(BaseModelType(RootModel[type_]))  # type: ignore
 
     if origin is Union:
         new_type = RootModel[type_]
-        return type(new_type.__name__, (new_type, MutableBaseModel), {}).as_mutable(
+        return type(new_type.__name__, (new_type, MutableBaseModel), {}).as_mutable(  # type: ignore
             UnionModelType(new_type)
         )
 
     if origin is Literal:
-        return Enum(*args)
+        return Enum(*args)  # type: ignore
 
     raise ValueError(f"Unsupported type {type_}")

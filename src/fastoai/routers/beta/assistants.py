@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, cast
+from typing import Annotated, cast
 
 from fastapi import APIRouter
 from openai.types.beta.assistant_create_params import AssistantCreateParams
@@ -10,6 +10,7 @@ from sqlmodel import col, select
 from ...dependencies import SessionDependency
 from ...models import Assistant
 from ...pagination import AsyncCursorPage
+from .._types import Order
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ async def create_assistant(
 async def list_assistants(
     *,
     limit: Annotated[int, Field(ge=1, le=100)] = 20,
-    order: Literal["asc", "desc"] = "desc",
+    order: Order = "desc",
     after: str | None = None,
     before: str | None = None,
     session: SessionDependency,
@@ -50,7 +51,7 @@ async def list_assistants(
             if order == "desc"
             else Assistant.created_at < before_assistant.created_at
         )
-    assistants = (await session.exec(statement.limit(limit))).all()
+    assistants = list((await session.exec(statement.limit(limit))).all())
     kwargs = {}
     if len(assistants) > 0:
         kwargs["first_id"] = assistants[0].id

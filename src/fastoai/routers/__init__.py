@@ -23,7 +23,7 @@ async def create_chat_completions(
     openai: OpenAIDependency,
 ):
     response = await openai.chat.completions.create(**params.model_dump())
-    if params.root["stream"]:
+    if params.root.get("stream", False):
         response = cast(AsyncIterable[ChatCompletionChunk], response)
 
         async def _stream(chunks: AsyncIterable[ChatCompletionChunk]):
