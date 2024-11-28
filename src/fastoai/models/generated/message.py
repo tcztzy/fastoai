@@ -19,7 +19,7 @@ class Message(WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix("msg_"))]
     """The identifier, which can be referenced in API endpoints."""
 
-    assistant_id: Annotated[str| None, Field(foreign_key='assistant.id')] | None = None
+    assistant_id: Annotated[str | None, Field(foreign_key='assistant.id')] = None
     """
     If applicable, the ID of the
     [assistant](https://platform.openai.com/docs/api-reference/assistants) that
@@ -50,7 +50,7 @@ class Message(WithMetadata, table=True):
     role: Annotated[Literal["user", "assistant"], Field(sa_type=Enum("user", "assistant"))]
     """The entity that produced the message. One of `user` or `assistant`."""
 
-    run_id: Annotated[str| None, Field(foreign_key='run.id')] | None = None
+    run_id: Annotated[str | None, Field(foreign_key='run.id')] = None
     """
     The ID of the [run](https://platform.openai.com/docs/api-reference/runs)
     associated with the creation of this message. Value is `null` when messages are

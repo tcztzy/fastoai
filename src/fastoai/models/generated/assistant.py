@@ -16,7 +16,8 @@ from .._utils import now, random_id_with_prefix
 
 if TYPE_CHECKING:
     from .message import Message
-    from .thread import Thread
+    from .run import Run
+    from .run_step import Step
 
 
 class Assistant(WithMetadata, table=True):
@@ -111,4 +112,5 @@ class Assistant(WithMetadata, table=True):
         return int(dt.timestamp())
 
     messages: list["Message"] = Relationship(back_populates="assistant")
-    threads: list["Thread"] = Relationship(back_populates="assistant")
+    runs: list["Run"] = Relationship(back_populates="assistant")
+    steps: list["Step"] = Relationship(back_populates="assistant")

@@ -13,6 +13,7 @@ from .._utils import now, random_id_with_prefix
 if TYPE_CHECKING:
     from .message import Message
     from .run import Run
+    from .run_step import Step
 
 
 class Thread(WithMetadata, table=True):
@@ -39,3 +40,4 @@ class Thread(WithMetadata, table=True):
 
     messages: list["Message"] = Relationship(back_populates="thread")
     runs: list["Run"] = Relationship(back_populates="thread")
+    steps: list["Step"] = Relationship(back_populates="thread")

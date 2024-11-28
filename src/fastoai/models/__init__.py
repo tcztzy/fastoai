@@ -92,11 +92,13 @@ def generate_module(cls: type[BaseModel]):
         case "Assistant":
             typing_check_imports = [
                 (".message", ("Message",)),
-                (".thread", ("Thread",)),
+                (".run", ("Run",)),
+                (".run_step", ("Step",)),
             ]
             relationships = [
                 'messages: list["Message"] = Relationship(back_populates="assistant")',
-                'threads: list["Thread"] = Relationship(back_populates="assistant")',
+                'runs: list["Run"] = Relationship(back_populates="assistant")',
+                'steps: list["Step"] = Relationship(back_populates="assistant")',
             ]
         case "Message":
             regular_imports.extend(
@@ -106,7 +108,6 @@ def generate_module(cls: type[BaseModel]):
                     (".run", ("Run",)),
                 ]
             )
-            typing_check_imports = []
             relationships = [
                 'assistant: Assistant | None = Relationship(back_populates="messages")',
                 'thread: Thread = Relationship(back_populates="messages")',
@@ -116,10 +117,12 @@ def generate_module(cls: type[BaseModel]):
             typing_check_imports = [
                 (".message", ("Message",)),
                 (".run", ("Run",)),
+                (".run_step", ("Step",)),
             ]
             relationships = [
                 'messages: list["Message"] = Relationship(back_populates="thread")',
                 'runs: list["Run"] = Relationship(back_populates="thread")',
+                'steps: list["Step"] = Relationship(back_populates="thread")',
             ]
         case "Run":
             regular_imports.extend(
@@ -178,23 +181,11 @@ def generate_module(cls: type[BaseModel]):
     )
     metadata_pattern = re.compile(r"metadata: (.+) = None(\s*\"\"\"[\s\S]*?\"\"\"\s*)")
     if metadata_pattern.search(base) is not None:
-        base = re.sub(
-            metadata_pattern,
-            "",
-            base,
-        )
-        base = re.sub(
-            "class (.+?)\\(SQLModel, table=True\\):",
-            "class \\1(WithMetadata, table=True):",
-            base,
-        )
+        base = re.sub(metadata_pattern, "", base)
+        base = re.sub(r"\(SQLModel", r"(WithMetadata", base)
 
-    object_pattern = r"object: Literal\[\"([\w\.]+)\"\](\s*\"\"\"[\s\S]*?\"\"\"\s*)"
-    mo = re.search(object_pattern, base)
-    if mo is None:
-        raise ValueError(f"Can't find object field for {name}")
-    obj = mo.group(1)
-    base = re.sub(object_pattern, r'object: ClassVar[Literal["\1"]] = "\1"\2', base)
+    object_pattern = r"object: Literal\[\"([\w\.]+)\"\]"
+    base = re.sub(object_pattern, r'object: ClassVar[Literal["\1"]] = "\1"', base)
     base = re.sub(
         r"(\w+): L(ist\[.+?\])",
         r"\1: Annotated[l\2, Field(sa_type=as_sa_type(l\2))]",
@@ -239,18 +230,16 @@ def generate_module(cls: type[BaseModel]):
         return int(dt.timestamp()){" if dt is not None else None" if optional else ""}
 """
     base = re.sub(r"Optional\[(\w+)\]", r"\1 | None", base)
-
-    for f, o in re.findall(r"(\w+)_id: str( \| None = None)?", base):
-        base = base.replace(
-            f"{f}_id: str",
-            f"{f}_id: Annotated[str{'| None' if o else ''}, Field(foreign_key='{f}.id')]",
-        )
+    base = re.sub(
+        r"(\w+)_id: str( \| None)?",
+        r"\1_id: Annotated[str\2, Field(foreign_key='\1.id')]",
+        base,
+    )
     dst_path = Path(__file__).parent / "generated" / f"{to_snake(cls.__name__)}.py"
     text = "\n".join((header, base))
     if len(relationships):
         text += "\n" + indent("\n".join(relationships), "    ") + "\n"
     dst_path.write_text(text)
-    return obj
 
 
 if get_settings().generate_models:
