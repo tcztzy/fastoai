@@ -23,7 +23,7 @@ async def create_thread(
     )
     session.add(thread)
     await session.commit()
-    for message in params.root["messages"] if params is not None else []:
+    for message in params.root.get("messages", []) if params is not None else []:
         await create_message(
             thread_id=thread.id,
             params=RootModel[MessageCreateParams].model_validate(message),
