@@ -9,7 +9,7 @@ from openai.types.file_purpose import FilePurpose
 from sqlmodel import col, select
 
 from ..dependencies import SessionDependency, SettingsDependency
-from ..models import File
+from ..models import FileObject
 from ..pagination import AsyncCursorPage
 from ._utils import create_model_from
 
@@ -22,8 +22,8 @@ async def upload_file(
     purpose: Annotated[FilePurpose, Form()],
     settings: SettingsDependency,
     session: SessionDependency,
-) -> File:
-    file_object = File.model_validate(
+) -> FileObject:
+    file_object = FileObject.model_validate(
         {
             "bytes": file.size,
             "filename": file.filename,
@@ -36,30 +36,30 @@ async def upload_file(
     session.add(file_object)
     await session.commit()
     await session.refresh(file_object)
-    return File.model_validate(file_object.model_dump())
+    return FileObject.model_validate(file_object.model_dump())
 
 
 @router.get("/files")
 async def list_files(
     q: Annotated[create_model_from(FileListParams), Query()],  # type: ignore
     session: SessionDependency,
-) -> AsyncCursorPage[File]:
+) -> AsyncCursorPage[FileObject]:
     params = cast(FileListParams, q.model_dump())
-    statement = select(File)
+    statement = select(FileObject)
     if purpose := params.get("purpose"):
-        statement = statement.where(File.purpose == purpose)
+        statement = statement.where(FileObject.purpose == purpose)
     if order := params.get("order"):
-        statement = statement.order_by(getattr(col(File.created_at), order)())
+        statement = statement.order_by(getattr(col(FileObject.created_at), order)())
     if after := params.get("after"):
         all_files = (await session.exec(statement)).all()
-        after_file = await session.get_one(File, after)
+        after_file = await session.get_one(FileObject, after)
         offset = all_files.index(after_file) + 1
         statement = statement.offset(offset)
     if limit := params.get("limit"):
         statement = statement.limit(limit)
     files = (await session.exec(statement)).all()
-    return AsyncCursorPage[File](
-        data=[File.model_validate(file.model_dump()) for file in files]
+    return AsyncCursorPage[FileObject](
+        data=[FileObject.model_validate(file.model_dump()) for file in files]
     )
 
 
@@ -67,9 +67,9 @@ async def list_files(
 async def retrieve_file(
     file_id: str,
     session: SessionDependency,
-) -> File:
-    file = await session.get_one(File, file_id)
-    return File.model_validate(file.model_dump())
+) -> FileObject:
+    file = await session.get_one(FileObject, file_id)
+    return FileObject.model_validate(file.model_dump())
 
 
 @router.get("/files/{file_id}/content")
@@ -78,7 +78,7 @@ async def retrieve_file_content(
     settings: SettingsDependency,
     session: SessionDependency,
 ):
-    file = await session.get_one(File, file_id)
+    file = await session.get_one(FileObject, file_id)
     return FileResponse(settings.upload_dir / file.id, filename=file.filename)
 
 
@@ -87,7 +87,7 @@ async def delete_file(
     file_id: str,
     session: SessionDependency,
 ):
-    file = await session.get_one(File, file_id)
+    file = await session.get_one(FileObject, file_id)
     await session.delete(file)
     await session.commit()
     return FileDeleted(id=file_id, deleted=True, object="file")

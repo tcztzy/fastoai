@@ -38,7 +38,7 @@ from ...models import (
     Assistant,
     Message,
     Run,
-    Step,
+    RunStep,
     Thread,
 )
 
@@ -148,7 +148,7 @@ async def create_run(
             status="in_progress",
         )
         session.add(message)
-        step = Step(  # type: ignore
+        step = RunStep(  # type: ignore
             run=run,
             thread=thread,
             assistant=assistant,
