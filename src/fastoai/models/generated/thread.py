@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Annotated
 from openai.types.beta.thread import Thread as _Thread
 from openai.types.beta.thread import ToolResources
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Field, Relationship
 
 from .._metadata import WithMetadata
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from .run import Run
     from .run_step import RunStep
 
-class Thread(WithMetadata, table=True):
+class Thread(AsyncAttrs, WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('thread_'))]
     created_at: Annotated[datetime, Field(default_factory=now)]
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None

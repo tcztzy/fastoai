@@ -371,6 +371,7 @@ def generate_module(module: ModuleType) -> ast.Module:
         [
             ast.ImportFrom("datetime", [ast.alias("datetime")], 0),
             ast.ImportFrom("typing", [ast.alias("Annotated")], 0),
+            ast.ImportFrom("sqlalchemy.ext.asyncio", [ast.alias("AsyncAttrs")], 0),
             ast.ImportFrom(
                 "sqlmodel",
                 [
@@ -407,10 +408,11 @@ def generate_module(module: ModuleType) -> ast.Module:
     if metadata_field:
         class_def.body.remove(metadata_field)
     class_def.bases = [
+        ast.Name(id="AsyncAttrs", ctx=ast.Load()),
         ast.Name(
             id="WithMetadata" if metadata_field else "SQLModel",
             ctx=ast.Load(),
-        )
+        ),
     ]
     class_def.keywords = [ast.keyword(arg="table", value=ast.Constant(value=True))]
     _fix_id(class_def)

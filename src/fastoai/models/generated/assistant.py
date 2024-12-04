@@ -8,6 +8,7 @@ from openai.types.beta.assistant_response_format_option import (
 )
 from openai.types.beta.assistant_tool import AssistantTool
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Field, Relationship
 
 from .._metadata import WithMetadata
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from .run import Run
     from .run_step import RunStep
 
-class Assistant(WithMetadata, table=True):
+class Assistant(AsyncAttrs, WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('asst_'))]
     created_at: Annotated[datetime, Field(default_factory=now)]
     description: str | None = None

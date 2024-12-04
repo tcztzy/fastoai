@@ -3,12 +3,13 @@ from typing import Annotated, Literal
 
 from openai.types.file_object import FileObject as _FileObject
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Enum, Field, SQLModel
 
 from .._utils import now, random_id_with_prefix
 
 
-class FileObject(SQLModel, table=True):
+class FileObject(AsyncAttrs, SQLModel, table=True):
     __tablename__ = 'file'
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('file-'))]
     bytes: int

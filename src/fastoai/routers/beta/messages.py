@@ -1,11 +1,12 @@
+from typing import cast
+
 from fastapi import APIRouter
 from openai.types.beta.threads.message import Message as OpenAIMessage
 from openai.types.beta.threads.message_create_params import MessageCreateParams
 from pydantic import RootModel
-from sqlmodel import select
 
 from ...dependencies import SessionDependency
-from ...models import Message
+from ...models import Message, Thread
 from ...pagination import AsyncCursorPage
 
 router = APIRouter()
@@ -17,23 +18,21 @@ async def create_message(
     params: RootModel[MessageCreateParams],
     session: SessionDependency,
 ):
-    params = params.root
-    if isinstance(params.content, str):
-        params.content = [
-            {"type": "text", "text": {"value": params.content, "annotations": []}}
+    if isinstance(params.root["content"], str):
+        content = [
+            {
+                "type": "text",
+                "text": {"value": params.root["content"], "annotations": []},
+            }
         ]
-    message = Message(
+    else:
+        content = params.root["content"]
+    message = Message(  # type: ignore
         thread_id=thread_id,
-        data=OpenAIMessage(
-            id="dummy",
-            created_at=0,
-            object="thread.message",
-            thread_id=thread_id,
-            attachments=params.attachments or None,
-            status="completed",
-            content=params.content,
-            role=params.role,
-        ),
+        attachments=params.root.get("attachments"),
+        status="completed",
+        content=content,
+        role=params.root["role"],
     )
     session.add(message)
     await session.commit()
@@ -46,5 +45,9 @@ async def list_messages(
     thread_id: str,
     session: SessionDependency,
 ) -> AsyncCursorPage[OpenAIMessage]:
-    messages = await session.exec(select(Message).where(Message.thread_id == thread_id))
-    return AsyncCursorPage[OpenAIMessage](data=messages.all())
+    thread = await session.get_one(Thread, thread_id)
+    messages = [
+        m.to_openai_model()
+        for m in cast(list[Message], await thread.awaitable_attrs.messages)
+    ]
+    return AsyncCursorPage[OpenAIMessage](data=messages)

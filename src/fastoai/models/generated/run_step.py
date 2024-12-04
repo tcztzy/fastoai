@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from openai.types.beta.threads.runs.run_step import LastError, StepDetails, Usage
 from openai.types.beta.threads.runs.run_step import RunStep as _RunStep
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Enum, Field, Relationship
 
 from .._metadata import WithMetadata
@@ -14,7 +15,7 @@ from .run import Run
 from .thread import Thread
 
 
-class RunStep(WithMetadata, table=True):
+class RunStep(AsyncAttrs, WithMetadata, table=True):
     __tablename__ = 'step'
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('step_'))]
     assistant_id: Annotated[str, Field(foreign_key='assistant.id')]

@@ -8,6 +8,7 @@ from openai.types.beta.threads.message import (
 from openai.types.beta.threads.message import Message as _Message
 from openai.types.beta.threads.message_content import MessageContent
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Enum, Field, Relationship
 
 from .._metadata import WithMetadata
@@ -18,7 +19,7 @@ from .run import Run
 from .thread import Thread
 
 
-class Message(WithMetadata, table=True):
+class Message(AsyncAttrs, WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('msg_'))]
     assistant_id: Annotated[str | None, Field(foreign_key='assistant.id', nullable=True)] = None
     attachments: Annotated[list[Attachment] | None, Field(sa_type=as_sa_type(list[Attachment]), nullable=True)] = None

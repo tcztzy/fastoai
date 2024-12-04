@@ -16,6 +16,7 @@ from openai.types.beta.threads.run import (
 from openai.types.beta.threads.run import Run as _Run
 from openai.types.beta.threads.run_status import RunStatus
 from pydantic import field_serializer
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Field, Relationship
 
 from .._metadata import WithMetadata
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from .message import Message
     from .run_step import RunStep
 
-class Run(WithMetadata, table=True):
+class Run(AsyncAttrs, WithMetadata, table=True):
     id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('run_'))]
     assistant_id: Annotated[str, Field(foreign_key='assistant.id')]
     cancelled_at: datetime | None = None
