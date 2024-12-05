@@ -27,7 +27,7 @@ class Assistant(AsyncAttrs, WithMetadata, table=True):
     instructions: str | None = None
     model: str
     name: str | None = None
-    tools: Annotated[list[AssistantTool], Field(sa_type=as_sa_type(list[AssistantTool]))]
+    tools: Annotated[list[AssistantTool], Field(default_factory=list, sa_type=as_sa_type(list[AssistantTool]))]
     response_format: Annotated[AssistantResponseFormatOption | None, Field(sa_type=as_sa_type(AssistantResponseFormatOption), nullable=True)] = None
     temperature: float | None = None
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None

@@ -175,6 +175,7 @@ def _fix_list(class_def: ast.ClassDef):
                 ann_assign.annotation = Annotated(
                     ann,
                     Field(
+                        default_factory=ast.Name("list", ctx=ast.Load()),
                         sa_type=as_sa_type_call,
                     ),
                 )

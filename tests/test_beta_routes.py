@@ -71,8 +71,5 @@ async def client_fixture(settings: Settings, session: AsyncSession):
 async def test_beta_routes(client: AsyncOpenAI):
     assistants = await client.beta.assistants.list()
     assert assistants.data == []
-    assistant = await client.beta.assistants.create(
-        model="gpt-4o-mini",
-        tools=[],  # TODO: tools should be optional
-    )
+    assistant = await client.beta.assistants.create(model="gpt-4o-mini")
     await client.beta.assistants.delete(assistant.id)

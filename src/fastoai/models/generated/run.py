@@ -50,7 +50,7 @@ class Run(AsyncAttrs, WithMetadata, table=True):
     status: Annotated[RunStatus, Field(sa_type=as_sa_type(RunStatus))]
     thread_id: Annotated[str, Field(foreign_key='thread.id')]
     tool_choice: Annotated[AssistantToolChoiceOption | None, Field(sa_type=as_sa_type(AssistantToolChoiceOption), nullable=True)] = None
-    tools: Annotated[list[AssistantTool], Field(sa_type=as_sa_type(list[AssistantTool]))]
+    tools: Annotated[list[AssistantTool], Field(default_factory=list, sa_type=as_sa_type(list[AssistantTool]))]
     truncation_strategy: Annotated[TruncationStrategy | None, Field(sa_type=as_sa_type(TruncationStrategy), nullable=True)] = None
     usage: Annotated[Usage | None, Field(sa_type=as_sa_type(Usage), nullable=True)] = None
     temperature: float | None = None
