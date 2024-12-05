@@ -33,13 +33,13 @@ class Message(AsyncAttrs, WithMetadata, table=True):
     status: Annotated[Literal['in_progress', 'incomplete', 'completed'], Field(sa_type=Enum('in_progress', 'incomplete', 'completed'))]
     thread_id: Annotated[str, Field(foreign_key='thread.id')]
 
-    def to_openai_model(self) -> _Message:
+    async def to_openai_model(self) -> _Message:
         value = self.model_dump(by_alias=True)
         value['object'] = 'thread.message'
         return _Message.model_validate(value)
 
     @field_serializer('completed_at', 'created_at', 'incomplete_at')
-    def serialize_datetime(dt: datetime | None) -> int | None:
+    def serialize_datetime(self, dt: datetime | None) -> int | None:
         if dt is None:
             return None
         return int(dt.timestamp())

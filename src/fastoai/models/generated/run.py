@@ -56,13 +56,13 @@ class Run(AsyncAttrs, WithMetadata, table=True):
     temperature: float | None = None
     top_p: float | None = None
 
-    def to_openai_model(self) -> _Run:
+    async def to_openai_model(self) -> _Run:
         value = self.model_dump(by_alias=True)
         value['object'] = 'thread.run'
         return _Run.model_validate(value)
 
     @field_serializer('cancelled_at', 'completed_at', 'created_at', 'expires_at', 'failed_at', 'started_at')
-    def serialize_datetime(dt: datetime | None) -> int | None:
+    def serialize_datetime(self, dt: datetime | None) -> int | None:
         if dt is None:
             return None
         return int(dt.timestamp())

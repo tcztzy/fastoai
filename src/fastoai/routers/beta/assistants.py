@@ -25,7 +25,7 @@ async def create_assistant(
     session.add(assistant)
     await session.commit()
     await session.refresh(assistant)
-    return assistant.to_openai_model()
+    return await assistant.to_openai_model()
 
 
 @router.get("/assistants", response_model=AsyncCursorPage[_Assistant])
@@ -69,7 +69,7 @@ async def list_assistants(
             )
         )
     return AsyncCursorPage[_Assistant](
-        data=[a.to_openai_model() for a in assistants], **kwargs
+        data=[await a.to_openai_model() for a in assistants], **kwargs
     )
 
 
@@ -79,7 +79,7 @@ async def retrieve_assistant(
     session: SessionDependency,
 ) -> _Assistant:
     assistant = await session.get_one(Assistant, assistant_id)
-    return assistant.to_openai_model()
+    return await assistant.to_openai_model()
 
 
 @router.post("/assistants/{assistant_id}", response_model=_Assistant)
@@ -93,7 +93,7 @@ async def update_assistant(
     for k, v in obj.items():
         setattr(assistant, k if k != "metadata" else "metadata_", v)
     await session.commit()
-    return assistant.to_openai_model()
+    return await assistant.to_openai_model()
 
 
 @router.delete("/assistants/{assistant_id}", response_model=AssistantDeleted)

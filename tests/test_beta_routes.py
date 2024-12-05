@@ -30,7 +30,7 @@ def settings_fixture():
 
 
 async def setup_database(session: AsyncSession):
-    user = User(name="First Last", password="password")
+    user = User(name="First Last", email="test@example.com", password="password")
     api_key = APIKey(user=user)  # type: ignore
     session.add(user)
     await session.commit()
@@ -68,12 +68,12 @@ async def client_fixture(settings: Settings, session: AsyncSession):
 
 
 @pytest.fixture(name="user", scope="module")
-async def user_fixture(session: AsyncSession):
+async def user_fixture(session: AsyncSession) -> User:
     return await (await session.exec(select(APIKey))).one().awaitable_attrs.user
 
 
 @pytest.mark.anyio
-async def test_beta_routes(client: AsyncOpenAI, user):
+async def test_beta_routes(client: AsyncOpenAI, user: User):
     assistants = await client.beta.assistants.list()
     assert assistants.data == []
     assistant = await client.beta.assistants.create(

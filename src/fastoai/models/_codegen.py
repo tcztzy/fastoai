@@ -237,12 +237,13 @@ def _fix_timestamp(class_def: ast.ClassDef):
             args=ast.arguments(
                 posonlyargs=[],
                 args=[
+                    ast.arg("self"),
                     ast.arg(
                         arg="dt",
                         annotation=Optional(name_datetime)
                         if optional
                         else name_datetime,
-                    )
+                    ),
                 ],
                 kwonlyargs=[],
                 kw_defaults=[],
@@ -295,8 +296,10 @@ def _fix_timestamp(class_def: ast.ClassDef):
         class_def.body.append(serializor)
 
 
-def _to_openai_model(openai_model_name: str, object_literal: str) -> ast.FunctionDef:
-    return ast.FunctionDef(
+def _to_openai_model(
+    openai_model_name: str, object_literal: str
+) -> ast.AsyncFunctionDef:
+    return ast.AsyncFunctionDef(
         name="to_openai_model",
         args=ast.arguments(
             posonlyargs=[],

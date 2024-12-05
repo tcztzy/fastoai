@@ -21,13 +21,13 @@ class Thread(AsyncAttrs, WithMetadata, table=True):
     created_at: Annotated[datetime, Field(default_factory=now)]
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None
 
-    def to_openai_model(self) -> _Thread:
+    async def to_openai_model(self) -> _Thread:
         value = self.model_dump(by_alias=True)
         value['object'] = 'thread'
         return _Thread.model_validate(value)
 
     @field_serializer('created_at')
-    def serialize_datetime(dt: datetime) -> int:
+    def serialize_datetime(self, dt: datetime) -> int:
         return int(dt.timestamp())
     messages: list['Message'] = Relationship(back_populates='thread')
     runs: list['Run'] = Relationship(back_populates='thread')

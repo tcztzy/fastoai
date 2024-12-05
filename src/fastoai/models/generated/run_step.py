@@ -32,13 +32,13 @@ class RunStep(AsyncAttrs, WithMetadata, table=True):
     type: Annotated[Literal['message_creation', 'tool_calls'], Field(sa_type=Enum('message_creation', 'tool_calls'))]
     usage: Annotated[Usage | None, Field(sa_type=as_sa_type(Usage), nullable=True)] = None
 
-    def to_openai_model(self) -> _RunStep:
+    async def to_openai_model(self) -> _RunStep:
         value = self.model_dump(by_alias=True)
         value['object'] = 'thread.run.step'
         return _RunStep.model_validate(value)
 
     @field_serializer('cancelled_at', 'completed_at', 'created_at', 'expired_at', 'failed_at')
-    def serialize_datetime(dt: datetime | None) -> int | None:
+    def serialize_datetime(self, dt: datetime | None) -> int | None:
         if dt is None:
             return None
         return int(dt.timestamp())

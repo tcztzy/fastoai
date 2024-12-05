@@ -33,13 +33,13 @@ class Assistant(AsyncAttrs, WithMetadata, table=True):
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None
     top_p: float | None = None
 
-    def to_openai_model(self) -> _Assistant:
+    async def to_openai_model(self) -> _Assistant:
         value = self.model_dump(by_alias=True)
         value['object'] = 'assistant'
         return _Assistant.model_validate(value)
 
     @field_serializer('created_at')
-    def serialize_datetime(dt: datetime) -> int:
+    def serialize_datetime(self, dt: datetime) -> int:
         return int(dt.timestamp())
     messages: list['Message'] = Relationship(back_populates='assistant')
     runs: list['Run'] = Relationship(back_populates='assistant')

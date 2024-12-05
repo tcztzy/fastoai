@@ -47,7 +47,7 @@ async def list_messages(
 ) -> AsyncCursorPage[OpenAIMessage]:
     thread = await session.get_one(Thread, thread_id)
     messages = [
-        m.to_openai_model()
+        await m.to_openai_model()
         for m in cast(list[Message], await thread.awaitable_attrs.messages)
     ]
     return AsyncCursorPage[OpenAIMessage](data=messages)

@@ -53,7 +53,7 @@ def run_decorator(run_model: Run, session: SessionDependency):
         async def wrapper(*args, **kwargs):
             yield _(
                 ThreadRunCreated(
-                    data=run_model.to_openai_model(),
+                    data=await run_model.to_openai_model(),
                     event="thread.run.created",
                 )
             )
@@ -71,7 +71,7 @@ def run_decorator(run_model: Run, session: SessionDependency):
                     await session.commit()
                     yield _(
                         ThreadRunCompleted(
-                            data=run_model.to_openai_model(),
+                            data=await run_model.to_openai_model(),
                             event="thread.run.completed",
                         )
                     )
@@ -82,7 +82,7 @@ def run_decorator(run_model: Run, session: SessionDependency):
                 await session.commit()
                 yield _(
                     ThreadRunExpired(
-                        data=run_model.to_openai_model(),
+                        data=await run_model.to_openai_model(),
                         event="thread.run.expired",
                     )
                 )
@@ -99,7 +99,7 @@ def run_decorator(run_model: Run, session: SessionDependency):
                 await session.commit()
                 yield _(
                     ThreadRunFailed(
-                        data=run_model.to_openai_model(),
+                        data=await run_model.to_openai_model(),
                         event="thread.run.failed",
                     )
                 )
@@ -161,7 +161,7 @@ async def create_run(
         )
         yield _(
             ThreadRunStepCreated(
-                data=step.to_openai_model(),
+                data=await step.to_openai_model(),
                 event="thread.run.step.created",
             )
         )
@@ -170,13 +170,13 @@ async def create_run(
         await session.refresh(step)
         yield _(
             ThreadRunStepInProgress(
-                data=step.to_openai_model(),
+                data=await step.to_openai_model(),
                 event="thread.run.step.in_progress",
             )
         )
         yield _(
             ThreadMessageCreated(
-                data=message.to_openai_model(),
+                data=await message.to_openai_model(),
                 event="thread.message.created",
             )
         )
@@ -184,7 +184,7 @@ async def create_run(
         await session.refresh(message)
         yield _(
             ThreadMessageInProgress(
-                data=message.to_openai_model(), event="thread.message.in_progress"
+                data=await message.to_openai_model(), event="thread.message.in_progress"
             )
         )
         async for part in await client.chat.completions.create(
@@ -225,14 +225,14 @@ async def create_run(
         yield _(
             ThreadRunQueued(
                 event="thread.run.queued",
-                data=run.to_openai_model(),
+                data=await run.to_openai_model(),
             )
         )
 
         yield _(
             ThreadRunInProgress(
                 event="thread.run.in_progress",
-                data=run.to_openai_model(),
+                data=await run.to_openai_model(),
             )
         )
         async for message in message_creation_step():

@@ -19,11 +19,11 @@ class FileObject(AsyncAttrs, SQLModel, table=True):
     status: Annotated[Literal['uploaded', 'processed', 'error'], Field(sa_type=Enum('uploaded', 'processed', 'error'))]
     status_details: str | None = None
 
-    def to_openai_model(self) -> _FileObject:
+    async def to_openai_model(self) -> _FileObject:
         value = self.model_dump(by_alias=True)
         value['object'] = 'file'
         return _FileObject.model_validate(value)
 
     @field_serializer('created_at')
-    def serialize_datetime(dt: datetime) -> int:
+    def serialize_datetime(self, dt: datetime) -> int:
         return int(dt.timestamp())
