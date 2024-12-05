@@ -28,13 +28,10 @@ attrs==24.2.0
 certifi==2024.8.30
     # via httpcore
     # via httpx
-    # via requests
 cffi==1.17.1 ; implementation_name != 'pypy' and os_name == 'nt'
     # via trio
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.0
-    # via requests
 click==8.1.7
     # via rich-toolkit
     # via typer
@@ -59,7 +56,6 @@ fastapi-cli==0.0.6
     # via fastapi
 filelock==3.16.1
     # via virtualenv
-fsspec==2024.10.0
 greenlet==3.1.1
     # via sqlalchemy
 h11==0.14.0
@@ -78,7 +74,6 @@ idna==3.10
     # via anyio
     # via email-validator
     # via httpx
-    # via requests
     # via trio
 iniconfig==2.0.0
     # via pytest
@@ -128,14 +123,12 @@ python-multipart==0.0.19
 pyyaml==6.0.2
     # via pre-commit
     # via uvicorn
-requests==2.32.3
-    # via fsspec
 rich==13.9.4
     # via rich-toolkit
     # via typer
-rich-toolkit==0.11.3
+rich-toolkit==0.12.0
     # via fastapi-cli
-ruff==0.8.1
+ruff==0.8.2
     # via fastoai
 shellingham==1.5.4
     # via typer
@@ -167,8 +160,6 @@ typing-extensions==4.12.2
     # via rich-toolkit
     # via sqlalchemy
     # via typer
-urllib3==2.2.3
-    # via requests
 uvicorn==0.32.1
     # via fastapi
     # via fastapi-cli

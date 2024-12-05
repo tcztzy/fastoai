@@ -12,7 +12,7 @@ dependencies = [
     "openai>=1.56.2",
     "pydantic[email]>=2.10.3",
     "pydantic-settings>=2.6.1",
-    "ruff>=0.8.1",
+    "ruff>=0.8.2",
     "sqlalchemy[asyncio]>=2.0.36",
     "sqlmodel>=0.0.22",
     "anyio[trio]>=4.6.2.post1",
@@ -30,20 +30,16 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-    "fsspec[github]>=2024.10.0",
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
-    "pyyaml>=6.0.2",
 ]
 universal = true
 
 [tool.uv]
 managed = true
 dev-dependencies = [
-    "fsspec[github]>=2024.10.0",
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
-    "pyyaml>=6.0.2",
 ]
 
 [tool.hatch.metadata]

@@ -1,11 +1,10 @@
-import asyncio
 from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from openai import AsyncOpenAI
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -15,21 +14,11 @@ from .settings import Settings, get_settings
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
 
 
-@lru_cache
-def get_engine(settings: SettingsDependency):
-    engine = create_async_engine(settings.database_url)
-
-    async def _run():
-        async with engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.drop_all)
-            await conn.run_sync(SQLModel.metadata.create_all)
-
-    asyncio.run(_run())
-    return engine
-
-
-async def get_session(engine: Annotated[AsyncEngine, Depends(get_engine)]):
+async def get_session(settings: SettingsDependency):
     """Get session."""
+    engine = create_async_engine(settings.database_url)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     async with AsyncSession(engine) as session:
         yield session
 
@@ -51,20 +40,15 @@ security = HTTPBearer()
 async def get_user(
     *,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    settings: SettingsDependency,
     session: SessionDependency,
 ) -> User:
     """Get the current user."""
-    if not settings.auth_enabled:
-        return APIKey(
-            id=credentials.credentials,
-            user=User(name="test", password="test"),  # type: ignore
-        ).user
     api_key = await session.get(APIKey, credentials.credentials)
     if api_key is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
         )
+    await session.refresh(api_key, ["user"])
     if not api_key.user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"

@@ -20,7 +20,6 @@ class Settings(BaseSettings, env_prefix="fastoai_", frozen=True):  # type: ignor
     base_url: str = "http://127.0.0.1:8000"
     database_url: str = "sqlite+aiosqlite:///"
     upload_dir: Path = Path.home() / ".fastoai" / "uploads"
-    auth_enabled: bool = False
     generate_models: bool = False
 
     def model_post_init(self, __context):
