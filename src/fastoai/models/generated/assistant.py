@@ -34,7 +34,7 @@ class Assistant(AsyncAttrs, WithMetadata, table=True):
     top_p: float | None = None
 
     def to_openai_model(self) -> _Assistant:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'assistant'
         return _Assistant.model_validate(value)
 

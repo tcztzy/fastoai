@@ -1,12 +1,13 @@
 from datetime import datetime
 
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlmodel import Field, Relationship, SQLModel
 
 from ._utils import now, random_id_with_prefix
 
 
-class User(SQLModel, table=True):
+class User(AsyncAttrs, SQLModel, table=True):
     """User model."""
 
     id: str = Field(default_factory=random_id_with_prefix("user_"), primary_key=True)
@@ -20,7 +21,7 @@ class User(SQLModel, table=True):
     api_keys: list["APIKey"] = Relationship(back_populates="user")
 
 
-class APIKey(SQLModel, table=True):
+class APIKey(AsyncAttrs, SQLModel, table=True):
     """API key model.
 
     API key is used for authenticating the user.

@@ -22,7 +22,7 @@ class Thread(AsyncAttrs, WithMetadata, table=True):
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None
 
     def to_openai_model(self) -> _Thread:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'thread'
         return _Thread.model_validate(value)
 

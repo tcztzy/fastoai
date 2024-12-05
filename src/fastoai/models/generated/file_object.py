@@ -20,7 +20,7 @@ class FileObject(AsyncAttrs, SQLModel, table=True):
     status_details: str | None = None
 
     def to_openai_model(self) -> _FileObject:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'file'
         return _FileObject.model_validate(value)
 

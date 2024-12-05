@@ -67,9 +67,34 @@ async def client_fixture(settings: Settings, session: AsyncSession):
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(name="user", scope="module")
+async def user_fixture(session: AsyncSession):
+    return await (await session.exec(select(APIKey))).one().awaitable_attrs.user
+
+
 @pytest.mark.anyio
-async def test_beta_routes(client: AsyncOpenAI):
+async def test_beta_routes(client: AsyncOpenAI, user):
     assistants = await client.beta.assistants.list()
     assert assistants.data == []
-    assistant = await client.beta.assistants.create(model="gpt-4o-mini")
+    assistant = await client.beta.assistants.create(
+        model="gpt-4o-mini",
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_weather",
+                    "description": "Get weather",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"location": {"type": "string"}},
+                        "required": ["location"],
+                    },
+                },
+            },
+            {"type": "code_interpreter"},
+        ],
+        metadata={"user_id": user.id},
+    )
+    assert len(assistant.tools) == 2
+    assert assistant.metadata == {"user_id": user.id}
     await client.beta.assistants.delete(assistant.id)

@@ -34,7 +34,7 @@ class Message(AsyncAttrs, WithMetadata, table=True):
     thread_id: Annotated[str, Field(foreign_key='thread.id')]
 
     def to_openai_model(self) -> _Message:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'thread.message'
         return _Message.model_validate(value)
 

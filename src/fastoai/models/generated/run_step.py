@@ -33,7 +33,7 @@ class RunStep(AsyncAttrs, WithMetadata, table=True):
     usage: Annotated[Usage | None, Field(sa_type=as_sa_type(Usage), nullable=True)] = None
 
     def to_openai_model(self) -> _RunStep:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'thread.run.step'
         return _RunStep.model_validate(value)
 

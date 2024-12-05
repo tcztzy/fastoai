@@ -315,7 +315,7 @@ def _to_openai_model(openai_model_name: str, object_literal: str) -> ast.Functio
                         ctx=ast.Load(),
                     ),
                     args=[],
-                    keywords=[],
+                    keywords=[ast.keyword("by_alias", ast.Constant(True))],
                 ),
             ),
             ast.Assign(

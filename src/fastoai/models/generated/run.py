@@ -57,7 +57,7 @@ class Run(AsyncAttrs, WithMetadata, table=True):
     top_p: float | None = None
 
     def to_openai_model(self) -> _Run:
-        value = self.model_dump()
+        value = self.model_dump(by_alias=True)
         value['object'] = 'thread.run'
         return _Run.model_validate(value)
 
