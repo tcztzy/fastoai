@@ -3,7 +3,7 @@ from pathlib import Path
 from ..settings import get_settings
 from ._codegen import generate_modules, ruff_check
 from ._metadata import WithMetadata as WithMetadata
-from .user import APIKey, User
+from .user import User
 
 if get_settings().generate_models:
     import openai.types.beta.assistant
@@ -31,7 +31,6 @@ from .generated.run_step import RunStep
 from .generated.thread import Thread
 
 __all__ = [
-    "APIKey",
     "User",
     "Assistant",
     "Message",

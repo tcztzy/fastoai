@@ -1,3 +1,5 @@
+"""Walk around for https://github.com/fastapi/sqlmodel/issues/290"""
+
 from typing import Annotated, Any, Self
 
 from pydantic.json_schema import (

@@ -3,14 +3,18 @@ from openai.pagination import AsyncPage
 from openai.types import Model
 from openai.types.model_deleted import ModelDeleted
 
-from ..dependencies import OpenAIDependency
+from ..dependencies import OpenAIDependency, SettingsDependency
 
 router = APIRouter(tags=["Models"])
 
 
 @router.get("/models", response_model=AsyncPage[Model])
-async def get_models(*, openai: OpenAIDependency):
-    return await openai.models.list()
+async def get_models(*, settings: SettingsDependency) -> AsyncPage[Model]:
+    client = await settings.get_openai_client()
+    return AsyncPage(
+        data=[model for endpoint in client.endpoints for model in endpoint.models],
+        object="list",
+    )
 
 
 @router.get("/models/{model:path}", response_model=Model)

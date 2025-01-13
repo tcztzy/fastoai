@@ -1,8 +1,8 @@
-from typing import Literal, Protocol
+from typing import Literal, Protocol, TypeAlias
 
 from openai import BaseModel
 
-type Order = Literal["asc", "desc"]
+Order: TypeAlias = Literal["asc", "desc"]
 
 
 class ToOpenaiModel(Protocol):

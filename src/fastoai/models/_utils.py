@@ -16,9 +16,9 @@ def get_random_string(length, allowed_chars=ascii_letters + digits):
     return "".join(secrets.choice(allowed_chars) for _ in range(length))
 
 
-def random_id_with_prefix(prefix: str):
+def random_id_with_prefix(prefix: str, length: int = 24):
     def _inner():
-        return f"{prefix}{get_random_string(24)}"  # (26 * 2 + 10) ^ 24 > uuid4
+        return f"{prefix}{get_random_string(length)}"  # (26 * 2 + 10) ^ 24 > uuid4
 
     return _inner
 

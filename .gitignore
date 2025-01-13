@@ -15,3 +15,4 @@ wheels/
 
 # dotenv
 .env*
+.coverage

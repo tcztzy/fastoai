@@ -8,7 +8,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from fastoai import app
 from fastoai.dependencies import get_session, get_settings
-from fastoai.models import APIKey, User
+from fastoai.models.key import Key
+from fastoai.models.organization import Organization
+from fastoai.models.organization_user import OrganizationUser, OrganizationUserRole
+from fastoai.models.project import Project
+from fastoai.models.project_user import ProjectUser, ProjectUserRole
+from fastoai.models.user import User
 from fastoai.settings import Settings
 
 
@@ -34,9 +39,29 @@ def settings_fixture():
 
 async def setup_database(session: AsyncSession):
     user = User(name="First Last", email="test@example.com", password="password")
-    api_key = APIKey(user=user)  # type: ignore
+    organization = Organization(name="Personal")
+    organization_user = OrganizationUser(
+        id=user.id,
+        organization_id=organization.id,
+        role=OrganizationUserRole.OWNER,
+    )
+    project = Project(name="Test Project", organization_id=organization.id)
+    project_user = ProjectUser(
+        name=user.name,
+        email=user.email,
+        role=ProjectUserRole.OWNER,
+        id=user.id,
+        project_id=project.id,
+    )
+    api_key = Key(
+        user_id=project_user.id,
+        project_id=project.id,
+    )
     session.add(user)
-    await session.commit()
+    session.add(organization)
+    session.add(organization_user)
+    session.add(project)
+    session.add(project_user)
     session.add(api_key)
     await session.commit()
 
@@ -64,7 +89,7 @@ async def user_fixture(session: AsyncSession) -> str:
 
 @pytest.fixture(name="api_key", scope="module")
 async def api_key_fixture(session: AsyncSession) -> str:
-    return (await session.exec(select(APIKey))).one().id
+    return (await session.exec(select(Key))).one().id
 
 
 @pytest.fixture(name="http_client", scope="module")

@@ -124,7 +124,7 @@ def _is_base_model(t: type):
     )
 
 
-def as_sa_type(type_: type) -> type:
+def as_sa_type(type_) -> type:
     try:
         if issubclass(type_, BaseModel):
             return type(type_.__name__, (type_, MutableBaseModel), {}).as_mutable(  # type: ignore
@@ -144,10 +144,7 @@ def as_sa_type(type_: type) -> type:
         return MutableList[t].as_mutable(BaseModelType(RootModel[type_]))  # type: ignore
 
     if origin is Union:
-        new_type = RootModel[type_]
-        return type(new_type.__name__, (new_type, MutableBaseModel), {}).as_mutable(  # type: ignore
-            UnionModelType(new_type)
-        )
+        return UnionModelType(RootModel[type_])  # type: ignore
 
     if origin is Literal:
         return Enum(*args)  # type: ignore

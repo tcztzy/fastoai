@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import typer
 import uvicorn
 
+from . import __version__
 from .dependencies import get_settings
 
 app = typer.Typer()
@@ -33,3 +34,9 @@ def serve(
         reload=reload,
         reload_excludes=["generated/*.py"],
     )
+
+
+@app.command()
+def version():
+    """Show the version of the package."""
+    typer.echo(f"fastoai v{__version__}")

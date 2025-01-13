@@ -8,7 +8,10 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .models import APIKey, User
+from .models import User
+from .models.key import Key
+from .models.project_user import ProjectUser
+from .models.service_account import ServiceAccount
 from .settings import Settings, get_settings
 
 SettingsDependency = Annotated[Settings, Depends(get_settings)]
@@ -41,19 +44,15 @@ async def get_user(
     *,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     session: SessionDependency,
-) -> User:
+) -> ProjectUser | ServiceAccount | None:
     """Get the current user."""
-    api_key = await session.get(APIKey, credentials.credentials)
+    api_key = await session.get(Key, credentials.credentials)
     if api_key is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
         )
     await session.refresh(api_key, ["user"])
-    if not api_key.user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
-        )
-    return api_key.user
+    return api_key.user or api_key.service_account
 
 
 UserDependency = Annotated[User, Depends(get_user)]
