@@ -55,7 +55,6 @@ async def setup_database(session: AsyncSession):
     )
     api_key = Key(
         user_id=project_user.id,
-        project_id=project.id,
     )
     session.add(user)
     session.add(organization)

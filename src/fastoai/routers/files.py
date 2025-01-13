@@ -1,17 +1,17 @@
 from shutil import copyfileobj
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import APIRouter, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from openai.types.file_deleted import FileDeleted
 from openai.types.file_list_params import FileListParams
 from openai.types.file_purpose import FilePurpose
+from pydantic import RootModel
 from sqlmodel import col, select
 
 from ..dependencies import SessionDependency, SettingsDependency
 from ..models import FileObject
 from ..pagination import AsyncCursorPage
-from ._utils import create_model_from
 
 router = APIRouter(tags=["Files"])
 
@@ -41,10 +41,10 @@ async def upload_file(
 
 @router.get("/files")
 async def list_files(
-    q: Annotated[create_model_from(FileListParams), Query()],  # type: ignore
+    q: Annotated[RootModel[FileListParams], Query()],
     session: SessionDependency,
 ) -> AsyncCursorPage[FileObject]:
-    params = cast(FileListParams, q.model_dump())
+    params = q.root
     statement = select(FileObject)
     if purpose := params.get("purpose"):
         statement = statement.where(FileObject.purpose == purpose)

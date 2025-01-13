@@ -60,7 +60,6 @@ class Key(KeyBase, table=True):
     ] = "all"
     admin_id: str | None = Field(default=None, foreign_key="organization_user.id")
     admin: OrganizationUser | None = Relationship(back_populates="admin_api_keys")
-    project_id: str | None = Field(default=None, foreign_key="project.id")
     user_id: str | None = Field(default=None, foreign_key="project_user.id")
     user: ProjectUser | None = Relationship(back_populates="api_keys")
     service_account_id: str | None = Field(
@@ -69,7 +68,14 @@ class Key(KeyBase, table=True):
     service_account: ServiceAccount | None = Relationship(back_populates="api_key")
 
     def model_post_init(self, __context):
-        self.value = "sk-proj-" + token_urlsafe(117)
+        if self.user_id is not None:
+            self.value = "sk-proj-" + token_urlsafe(117)
+        elif self.admin_id is not None:
+            self.value = "sk-admin-" + token_urlsafe(93)
+        elif self.user_id is not None:
+            self.value = "sk-svcacct-" + token_urlsafe(94)
+        else:
+            self.value = "sk-" + token_urlsafe(128)
 
     @computed_field
     @property
