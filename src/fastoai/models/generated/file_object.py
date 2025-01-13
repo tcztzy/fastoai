@@ -11,9 +11,9 @@ from .._utils import now, random_id_with_prefix
 
 class FileObject(AsyncAttrs, SQLModel, table=True):
     __tablename__ = 'file'
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('file-'))]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('file-'))
     bytes: int
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    created_at: datetime = Field(default_factory=now)
     filename: str
     purpose: Annotated[Literal['assistants', 'assistants_output', 'batch', 'batch_output', 'fine-tune', 'fine-tune-results', 'vision'], Field(sa_type=Enum('assistants', 'assistants_output', 'batch', 'batch_output', 'fine-tune', 'fine-tune-results', 'vision'))]
     status: Annotated[Literal['uploaded', 'processed', 'error'], Field(sa_type=Enum('uploaded', 'processed', 'error'))]

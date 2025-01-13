@@ -3,7 +3,7 @@ from openai.pagination import AsyncPage
 from openai.types import Model
 from openai.types.model_deleted import ModelDeleted
 
-from ..dependencies import OpenAIDependency, SettingsDependency
+from ..dependencies import ClientDependency, SettingsDependency
 
 router = APIRouter(tags=["Models"])
 
@@ -18,10 +18,10 @@ async def get_models(*, settings: SettingsDependency) -> AsyncPage[Model]:
 
 
 @router.get("/models/{model:path}", response_model=Model)
-async def retrieve_model(*, model: str, openai: OpenAIDependency) -> Model:
-    return await openai.models.retrieve(model)
+async def retrieve_model(*, model: str, client: ClientDependency) -> Model:
+    return await client.models.retrieve(model)
 
 
 @router.delete("/models/{model:path}", response_model=ModelDeleted)
-async def delete_model(*, model: str, openai: OpenAIDependency) -> ModelDeleted:
-    return await openai.models.delete(model)
+async def delete_model(*, model: str, client: ClientDependency) -> ModelDeleted:
+    return await client.models.delete(model)

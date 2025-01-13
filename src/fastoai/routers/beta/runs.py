@@ -33,7 +33,7 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 from openai.types.shared import ErrorObject
 from pydantic import RootModel
 
-from ...dependencies import OpenAIDependency, SessionDependency
+from ...dependencies import ClientDependency, SessionDependency
 from ...models import (
     Assistant,
     Message,
@@ -117,7 +117,7 @@ async def create_run(
     thread_id: str,
     params: RootModel[RunCreateParams],
     session: SessionDependency,
-    client: OpenAIDependency,
+    client: ClientDependency,
 ):
     if not params.root.get("stream", False):
         raise NotImplementedError("Non-streaming is not yet supported")

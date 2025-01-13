@@ -1,13 +1,13 @@
-from functools import lru_cache
 from typing import Annotated
 
+import asyncstdlib as a
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ._client import AsyncOpenAI
 from .models import User
 from .models.key import Key
 from .models.project_user import ProjectUser
@@ -29,13 +29,13 @@ async def get_session(settings: SettingsDependency):
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 
 
-@lru_cache
-def get_openai(settings: SettingsDependency):
+@a.lru_cache
+async def get_openai(settings: SettingsDependency):
     """Get OpenAI client."""
-    return AsyncOpenAI(**settings.openai.model_dump())
+    return await settings.get_openai_client()
 
 
-OpenAIDependency = Annotated[AsyncOpenAI, Depends(get_openai)]
+ClientDependency = Annotated[AsyncOpenAI, Depends(get_openai)]
 
 security = HTTPBearer()
 

@@ -17,11 +17,11 @@ from .thread import Thread
 
 class RunStep(AsyncAttrs, WithMetadata, table=True):
     __tablename__ = 'step'
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('step_'))]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('step_'))
     assistant_id: Annotated[str, Field(foreign_key='assistant.id')]
     cancelled_at: datetime | None = None
     completed_at: datetime | None = None
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    created_at: datetime = Field(default_factory=now)
     expired_at: datetime | None = None
     failed_at: datetime | None = None
     last_error: Annotated[LastError | None, Field(sa_type=as_sa_type(LastError), nullable=True)] = None

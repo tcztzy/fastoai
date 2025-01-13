@@ -7,7 +7,7 @@ from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 from openai.types.chat.completion_create_params import CompletionCreateParams
 from pydantic import RootModel
 
-from ..dependencies import OpenAIDependency, get_user
+from ..dependencies import ClientDependency, get_user
 from .beta import router as beta_router
 from .files import router as files_router
 from .models import router as models_router
@@ -20,9 +20,9 @@ chat_router = APIRouter(tags=["Chat"])
 @chat_router.post("/chat/completions")
 async def create_chat_completions(
     params: RootModel[CompletionCreateParams],
-    openai: OpenAIDependency,
+    client: ClientDependency,
 ):
-    response = await openai.chat.completions.create(**params.model_dump())
+    response = await client.chat.completions.create(**params.model_dump())
     if params.root.get("stream", False):
         response = cast(AsyncIterable[ChatCompletionChunk], response)
 

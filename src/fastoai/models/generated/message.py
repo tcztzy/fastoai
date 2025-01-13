@@ -20,12 +20,12 @@ from .thread import Thread
 
 
 class Message(AsyncAttrs, WithMetadata, table=True):
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('msg_'))]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('msg_'))
     assistant_id: Annotated[str | None, Field(foreign_key='assistant.id', nullable=True)] = None
     attachments: Annotated[list[Attachment] | None, Field(sa_type=as_sa_type(list[Attachment]), nullable=True)] = None
     completed_at: datetime | None = None
     content: Annotated[list[MessageContent], Field(default_factory=list, sa_type=as_sa_type(list[MessageContent]))]
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    created_at: datetime = Field(default_factory=now)
     incomplete_at: datetime | None = None
     incomplete_details: Annotated[IncompleteDetails | None, Field(sa_type=as_sa_type(IncompleteDetails), nullable=True)] = None
     role: Annotated[Literal['user', 'assistant'], Field(sa_type=Enum('user', 'assistant'))]

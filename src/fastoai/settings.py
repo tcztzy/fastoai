@@ -60,9 +60,7 @@ class Settings(
             )
         )
 
-    async def get_openai_client(
-        self,
-    ) -> AsyncOpenAI:
+    async def get_openai_client(self) -> AsyncOpenAI:
         results: dict[tuple[str, str], list[Model]] = {}
         try:
             tasks: dict[tuple[str, str], asyncio.Task[list[Model]]] = {}
@@ -79,9 +77,7 @@ class Settings(
         except* OpenAIError as excgroup:
             for exc in excgroup.exceptions:
                 logger.error(exc)
-        return AsyncOpenAI(
-            endpoints=results,
-        )
+        return AsyncOpenAI(endpoints=results)
 
 
 @lru_cache

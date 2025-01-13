@@ -57,21 +57,16 @@ def Field(*args, **kwargs) -> ast.Call:
 
 def _fix_id(class_def: ast.ClassDef):
     id_field = cast(ast.AnnAssign, class_def.body[0])
-    id_field.annotation = Annotated(
-        id_field.annotation,
-        Field(
-            primary_key=ast.Constant(value=True),
-            default_factory=ast.Call(
-                func=ast.Name(id="random_id_with_prefix", ctx=ast.Load()),
-                args=[
-                    ast.Constant(
-                        value=ID_PREFIXES.get(
-                            class_def.name, class_def.name.lower() + "_"
-                        )
-                    )
-                ],
-                keywords=[],
-            ),
+    id_field.value = Field(
+        primary_key=ast.Constant(value=True),
+        default_factory=ast.Call(
+            func=ast.Name(id="random_id_with_prefix", ctx=ast.Load()),
+            args=[
+                ast.Constant(
+                    value=ID_PREFIXES.get(class_def.name, class_def.name.lower() + "_")
+                )
+            ],
+            keywords=[],
         ),
     )
 
@@ -219,9 +214,9 @@ def _fix_timestamp(class_def: ast.ClassDef):
             and ann_assign.target.id.endswith("_at")
         ):
             if isinstance(ann_assign.annotation, ast.Name):
-                ann_assign.annotation = Annotated(
-                    ast.Name(id="datetime", ctx=ast.Load()),
-                    Field(default_factory=ast.Name(id="now", ctx=ast.Load())),
+                ann_assign.annotation = ast.Name(id="datetime", ctx=ast.Load())
+                ann_assign.value = Field(
+                    default_factory=ast.Name(id="now", ctx=ast.Load())
                 )
             else:
                 ann_assign.annotation = Optional(

@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from .run_step import RunStep
 
 class Assistant(AsyncAttrs, WithMetadata, table=True):
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('asst_'))]
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('asst_'))
+    created_at: datetime = Field(default_factory=now)
     description: str | None = None
     instructions: str | None = None
     model: str

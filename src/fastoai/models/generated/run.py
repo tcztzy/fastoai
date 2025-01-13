@@ -30,11 +30,11 @@ if TYPE_CHECKING:
     from .run_step import RunStep
 
 class Run(AsyncAttrs, WithMetadata, table=True):
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('run_'))]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('run_'))
     assistant_id: Annotated[str, Field(foreign_key='assistant.id')]
     cancelled_at: datetime | None = None
     completed_at: datetime | None = None
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    created_at: datetime = Field(default_factory=now)
     expires_at: datetime | None = None
     failed_at: datetime | None = None
     incomplete_details: Annotated[IncompleteDetails | None, Field(sa_type=as_sa_type(IncompleteDetails), nullable=True)] = None

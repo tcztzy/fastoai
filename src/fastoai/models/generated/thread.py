@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from .run_step import RunStep
 
 class Thread(AsyncAttrs, WithMetadata, table=True):
-    id: Annotated[str, Field(primary_key=True, default_factory=random_id_with_prefix('thread_'))]
-    created_at: Annotated[datetime, Field(default_factory=now)]
+    id: str = Field(primary_key=True, default_factory=random_id_with_prefix('thread_'))
+    created_at: datetime = Field(default_factory=now)
     tool_resources: Annotated[ToolResources | None, Field(sa_type=as_sa_type(ToolResources), nullable=True)] = None
 
     async def to_openai_model(self) -> _Thread:
