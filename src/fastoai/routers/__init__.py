@@ -40,7 +40,7 @@ async def create_chat_completions(
                     thinking = True
                 if thinking and not hasattr(delta, "reasoning_content"):
                     delta.content = "</think>" + (delta.content or "")
-                yield f"data: {chunk.model_dump_json()}\n\n"
+                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
             yield "data: [DONE]\n\n"
 
