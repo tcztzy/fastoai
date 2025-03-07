@@ -29,6 +29,7 @@ from .generated.message import Message
 from .generated.run import Run
 from .generated.run_step import RunStep
 from .generated.thread import Thread
+from .project import Project
 
 __all__ = [
     "User",
@@ -38,4 +39,5 @@ __all__ = [
     "RunStep",
     "Thread",
     "FileObject",
+    "Project",
 ]

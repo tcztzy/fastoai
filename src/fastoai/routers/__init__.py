@@ -27,19 +27,7 @@ async def create_chat_completions(
         response = cast(AsyncIterable[ChatCompletionChunk], response)
 
         async def _stream(chunks: AsyncIterable[ChatCompletionChunk]):
-            # deepseek reasoner has a extra field "reasoning_content" and this will not
-            # present when "content" is present, so we need to add it in <think></think>
-            thinking = False
             async for chunk in chunks:
-                delta = chunk.choices[0].delta
-                if hasattr(delta, "reasoning_content"):
-                    content = cast(str, getattr(delta, "reasoning_content"))
-                    delta.content = content
-                    if not thinking:
-                        delta.content = "<think>" + content
-                    thinking = True
-                if thinking and not hasattr(delta, "reasoning_content"):
-                    delta.content = "</think>" + (delta.content or "")
                 yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
             yield "data: [DONE]\n\n"

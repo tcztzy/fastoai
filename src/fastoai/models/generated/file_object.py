@@ -17,6 +17,7 @@ class FileObject(AsyncAttrs, SQLModel, table=True):
     filename: str
     purpose: Annotated[Literal['assistants', 'assistants_output', 'batch', 'batch_output', 'fine-tune', 'fine-tune-results', 'vision'], Field(sa_type=Enum('assistants', 'assistants_output', 'batch', 'batch_output', 'fine-tune', 'fine-tune-results', 'vision'))]
     status: Annotated[Literal['uploaded', 'processed', 'error'], Field(sa_type=Enum('uploaded', 'processed', 'error'))]
+    expires_at: datetime | None = None
     status_details: str | None = None
 
     async def to_openai_model(self) -> _FileObject:
@@ -24,6 +25,8 @@ class FileObject(AsyncAttrs, SQLModel, table=True):
         value['object'] = 'file'
         return _FileObject.model_validate(value)
 
-    @field_serializer('created_at')
-    def serialize_datetime(self, dt: datetime) -> int:
+    @field_serializer('created_at', 'expires_at')
+    def serialize_datetime(self, dt: datetime | None) -> int | None:
+        if dt is None:
+            return None
         return int(dt.timestamp())

@@ -32,7 +32,6 @@ class Settings(
 ):
     """Settings."""
 
-    openai: OpenAISettings = Field(default_factory=OpenAISettings)
     base_url: str = "http://127.0.0.1:8000"
     database_url: str = ""
     upload_dir: Path = FASTOAI_DIR / "uploads"
